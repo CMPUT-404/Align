@@ -1,1 +1,1 @@
-web: gunicorn align/align.wsgi
+web: gunicorn align.wsgi
