@@ -25,16 +25,9 @@ SECRET_KEY = 'y1!!@x7$1bq!==zla(jj@ceqixc#r^yoq90ta-yn1$=)x$+cj$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1','testserver']
+ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-]
-CORS_ORIGIN_REGEX_WHITELIST = [
-    'http://localhost:3000',
-]
-
 
 # Application definition
 
