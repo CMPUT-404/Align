@@ -52,6 +52,7 @@ def get_posts(request):
             'request': Request(requests),
         }
         id = request.data.get('id')
+        #print(id)
         queryset = Posts.objects.all().filter(Q(visibilities = True)|Q(visible_to = id)).order_by("-publish")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         #data = serializers.serialize('json', self.get_queryset())
@@ -61,16 +62,35 @@ def get_posts(request):
         #    'request': Request(requests)
         #}
         print(request.data)
-        serializer = PostsCreateSerializer(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
+        try:
+            PostsCreateSerializer.create(request.data)
             return HttpResponse("the post has been successfully added")
-        else:
+        except:
             return HttpResponse("the post has not been added")
-        #serializer.
-        #serializer.is_valid()
-        #serializer.save()
-        #id = request.data.get('id')
-        #queryset = Posts.objects.all().filter(author).order_by("-publish")
-        #serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
+
+
+@api_view(['GET', 'POST'])
+def get_posts_by_id(request,author_id):
+    #print("_____________________________")
+    #print(author_id)
+    factory = APIRequestFactory()
+    requests = factory.get('/')
+    if request.method == 'GET':
+        serializer_context = {
+            'request': Request(requests),
+        }
+        your_id = request.data.get('id')
+        if your_id == None:
+            return HttpResponse("id is invalid")
+        #author_id = request.data.get('author_id')
+        if author_id == None:
+            return HttpResponse("author_id is invalid")
+        #print("_____________________________")
+        #print(your_id)
+        #print(author_id)
+        queryset = Posts.objects.all().filter(Q(author = author_id)).filter(Q(visibilities = True)|Q(visible_to = your_id)).order_by("-publish")
+        serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         #data = serializers.serialize('json', self.get_queryset())
+        return Response(serializer_class.data)
+    else:
+        return HttpResponse("the should be a Get request")

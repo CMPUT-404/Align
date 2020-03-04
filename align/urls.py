@@ -28,7 +28,7 @@ router.register(r'users', user_views.UserViewSet)
 router.register(r'groups', user_views.GroupViewSet)
 
 router.register(r'posts', posts_views.PostsViewSet,basename='Post-list')
-router.register(r'comments', comments_views.CommentsViewSet)
+#router.register(r'comments', comments_views.CommentsViewSet)
 
 router.register(r'friendrequest', friends_views.FriendRequestViewSet)
 
@@ -40,6 +40,7 @@ router.register(r'following', friends_views.FollowersViewSet, basename="followin
 
 urlpatterns = [
     path('', include('posts.urls')),
+    path('', include('comments.urls')),
     path('admin/', admin.site.urls),
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),

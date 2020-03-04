@@ -24,18 +24,35 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
         return ("text/plain")
 
 class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
+    @classmethod
     def create(self, validated_data):
-        print(validated_data)
-        post = Posts.objects.create(
+        author_id = validated_data.get("author",Posts.author)
+        author_obj = User.objects.get(id = author_id)
+        '''
+        if validated_data.get('visible_to', Posts.visible_to) == "":
+            vis = author_id
+        else:
+            vis = validated_data.get('visible_to', Posts.visible_to) + "," + author_id
+            '''
+
+        #print(author_obj)
+        #validated_data['author'] = author_obj
+        #print("__________________________________")
+        #print(author_obj.id)
+        post = Posts(
             title=validated_data.get('title', Posts.title),
-            author=validated_data.get('author', Posts.author),
+            author = author_obj,
+            #author=validated_data.get('author', Posts.author),
             description=validated_data.get('description', Posts.description),
             content=validated_data.get('content', Posts.content),
             visibilities=validated_data.get('visibilities', Posts.visibilities),
-            visible_to =validated_data.get('visible_to', Posts.visible_to),
+            #visible_to = vis,
+            visible_to = validated_data.get('visible_to', Posts.visible_to),
             publish = validated_data.get('publish', Posts.publish),
         )
-        return post
+        post.save()
+        return True
+
     class Meta:
         model = Posts
         fields = ['title','author', 'description','content','visibilities','visible_to','publish']

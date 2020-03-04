@@ -21,5 +21,5 @@ class Posts(models.Model):
 	visible_to = models.TextField(blank=True,max_length=300)
 
 	#images = models.ImageField(blank=True)
-	publish = models.DateTimeField(default=timezone.now)
+	publish = models.DateTimeField(blank=True,default=timezone.now)
 	#author_data = User.objects.prefetch_related('posts')
