@@ -25,9 +25,19 @@ SECRET_KEY = 'y1!!@x7$1bq!==zla(jj@ceqixc#r^yoq90ta-yn1$=)x$+cj$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'cloud-align-server.herokuapp.com', 'testserver']
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+    'https://cloud-align-server.herokuapp.com'
+]
+CORS_ORIGIN_REGEX_WHITELIST = [
+    'http://localhost:3000',
+    'https://cloud-align-server.herokuapp.com'
+]
+
 
 # Application definition
 
