@@ -1,11 +1,16 @@
 from django.db import models
 from django.utils import timezone
 from posts.models import Posts
+#from django.contrib.auth import get_user_model
+# Create your models here.
+#User = get_user_model()
 # Create your models here.
 class Comments(models.Model):
     # it has a title
-	title = models.CharField(max_length=300)
-    # it has a author (many to one)
-	root = models.ForeignKey(Posts, on_delete = models.CASCADE)
-	plainText = models.TextField()
-	publish = models.DateTimeField(default=timezone.now)
+	id = models.AutoField(primary_key=True)
+	#
+	auth = models.TextField()
+	#
+	root = models.ForeignKey(Posts, related_name='comments', on_delete = models.CASCADE)
+	comment = models.TextField()
+	publish = models.DateTimeField(blank = True,default=timezone.now)
