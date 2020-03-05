@@ -8,9 +8,10 @@ from posts.models import Posts
 class Comments(models.Model):
     # it has a title
 	id = models.AutoField(primary_key=True)
-	#
+	# new push test for heroku
 	auth = models.TextField()
 	#
 	root = models.ForeignKey(Posts, related_name='comments', on_delete = models.CASCADE)
 	comment = models.TextField()
 	publish = models.DateTimeField(blank = True,default=timezone.now)
+	#est = models.TextField(blank = True,default="test")
