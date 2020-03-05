@@ -19,7 +19,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         user.save()
 
         return user
-    
+     
     def to_representation(self, instance):
         data = super().to_representation(instance)
         for key, value in data.items():
