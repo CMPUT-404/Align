@@ -14,4 +14,4 @@ class Comments(models.Model):
 	root = models.ForeignKey(Posts, related_name='comments', on_delete = models.CASCADE)
 	comment = models.TextField()
 	publish = models.DateTimeField(blank = True,default=timezone.now)
-	test = models.TextField(blank = True,default="test")
+	#est = models.TextField(blank = True,default="test")
