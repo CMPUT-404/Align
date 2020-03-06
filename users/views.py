@@ -11,6 +11,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
 
 from users.serializers import UserSerializer, GroupSerializer
 
@@ -35,19 +36,54 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class LoginView(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        content = {
-            'user': unicode(UserSerializer(request.user, context={'request': request}).data),  # `django.contrib.auth.User` instance.
-            'auth': unicode(request.auth),  # None
-        }
-        return Response(content)
+    def post(self, request):
+        username = request.data.get('username', None)
+        password = request.data.get('password', None)
+        if username is None or password is None:
+            return Response(status=400, data={'message': 'username or password is None'})
+        if User.objects.filter(username=username).exists():
+            user = User.objects.get(username=username)
+            if user.check_password(password):
+                serializer = UserSerializer(user, context={'request': request})
+                # if no token, generate a new token
+                if not Token.objects.filter(user=user).exists():
+                    Token.objects.create(user=user)
+                return Response({'token': Token.objects.get(user=user).key, 'user': serializer.data})
+            else:
+                return Response(status=400, data={'message': 'Username or password is incorrect'})
+        else:
+            return Response(status=400, data={'message': 'Username or password is incorrect'})
 
+''' # ignore me please
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+
+
+class CustomObtainAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        response = super(CustomObtainAuthToken, self).post(request, *args, **kwargs)
+        token = Token.objects.get(key=response.data['token'])
+        return Response({'token': token.key, 'id': token.user_id})
+'''
+
+######### get user by token #######################
+# from rest_framework.authtoken.models import Token
+# user = Token.objects.get(key='token string').user
+###################################################
 
 class RegisterView(CreateAPIView):
     permission_classes = [
         permissions.AllowAny
     ]
     serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = UserSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            token, created = Token.objects.get_or_create(user=serializer.instance)
+            return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=400, data={'status': 'false', 'errors': serializer.errors})
