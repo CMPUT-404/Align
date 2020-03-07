@@ -17,6 +17,8 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
+from rest_framework.authtoken.views import obtain_auth_token
+
 from users import views as user_views
 from posts import views as posts_views
 #from posts import views as AuthorPosts
@@ -42,6 +44,7 @@ urlpatterns = [
     path('', include('posts.urls')),
     path('', include('comments.urls')),
     path('admin/', admin.site.urls),
+    #path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^users/login$', user_views.LoginView.as_view()),

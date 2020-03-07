@@ -31,12 +31,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         return data
         
 
+
     class Meta:
         model = User
         fields = ['id', 'password', 'username', 'email', 'bio', 'host', 'firstName', 'lastName', 'displayName', 'url', 'github', 'groups']
-        write_only_fields = ('password',)
+        extra_kwargs = {'password': {'write_only': True}}
         read_only_fields = ('id',)
-
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
