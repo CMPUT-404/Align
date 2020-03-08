@@ -62,6 +62,24 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
             response = Response(responseDictionary)
 
         return response
+    
+    def retrieve(self, request, pk=None):
+        # retrieve a list of friend requests that the user has
+        responseDictionary = {"query":"friend request list", "author": [], "requests": []}
+        
+        try:
+            pkUser = User.objects.get(id=pk)
+            pkhost = pkUser.host + '/author/' + str(pk)
+            if ('http' not in pkhost):
+                pkhost = 'http://' + pkhost   
+            name = pkUser.displayName
+            responseDictionary["author"] = [pkhost, name]
+            responseDictionary["requests"] = FriendRequestViewSet.serializer_class.requests(pk)
+            response = Response(responseDictionary)
+        except:
+            response = Response(responseDictionary)
+                
+        return response
 
 
 class FriendViewSet(viewsets.ModelViewSet):
@@ -75,7 +93,6 @@ class FriendViewSet(viewsets.ModelViewSet):
     @action(methods=['post'], detail=False, url_path='requestprocess', url_name='friendRequestProcess')
     def friendRequestProcess(self, request):
         # accept/decline friend request
-
 
         # POST /friend/requestprocess
         responseDictionary = {"query":"friendrequestprocess", "success": True}
@@ -97,7 +114,10 @@ class FriendViewSet(viewsets.ModelViewSet):
                 requestJson = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["friend"].split("/")[-2]
-                friendStatus = "accept"
+                try:
+                    friendStatus = requestJson["status"]
+                except:
+                    friendStatus = "accept"
 
             if (not (friendID and authorID)):
                 raise ValueError("No friendID or authorID was given")
@@ -268,23 +288,31 @@ class FollowersViewSet(viewsets.ModelViewSet):
         try:
             try:
                 # swagger
+                responseDictionary["test"] = "point 1"
+                responseDictionary["json1"] = request.body
                 body = request.body
                 requestJson = json.loads(body)
                 authorID = requestJson["author"].split('/')[-1]             # person requesting deletion
                 friendID = requestJson["following"].split('/')[-1]            # friend getting deleted
+                responseDictionary["test"] = "point 2"
                 if (authorID == ''):
                     requestJson["author"].split('/')[-2]
                 if (friendID == ''):
                     requestJson["following"].split('/')[-2]
+                responseDictionary["test"] = "point 3"
             except:
                 # html form
+                responseDictionary["json2"] = request.data
+                responseDictionary["test"] = "point 4"
                 requestJson = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["following"].split("/")[-2]
+                responseDictionary["test"] = "point 4"
 
             validated_data = {"author": friendID, "friend": authorID}
             FollowersViewSet.serializer_class.delete(validated_data)
             response = Response(responseDictionary)
+            responseDictionary["test"] = "point 5"
 
         except:
             responseDictionary["success"] = False
