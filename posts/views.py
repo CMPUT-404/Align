@@ -20,6 +20,8 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 from django.db.models import Q
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 #@api_view(['GET', 'POST'])
 class PostsViewSet(viewsets.ModelViewSet):
@@ -42,6 +44,21 @@ class PostsViewSet(viewsets.ModelViewSet):
                 serializer_class = PostsSerializer
                 return response
 
+@api_view(['GET'])
+def get_posts_author(request,author_id):
+    factory = APIRequestFactory()
+    requests = factory.get('/')
+    if request.method == 'GET':
+        serializer_context = {
+            'request': Request(requests),
+        }
+        #id = request.data.get('id')
+        #print(id)
+        author_obj = User.objects.get(id = author_id)
+        queryset = Posts.objects.all().filter(author = author_obj).order_by("-publish")
+        serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
+        #data = serializers.serialize('json', self.get_queryset())
+        return Response(serializer_class.data)
 
 @api_view(['GET', 'POST'])
 def get_posts(request):

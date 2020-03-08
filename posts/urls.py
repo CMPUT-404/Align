@@ -6,6 +6,7 @@ urlpatterns = [
     path('author/posts', views.get_posts),
     path('author/<str:author_id>/posts', views.get_posts_by_id),
     #path('snippets/<int:pk>', views.snippet_detail),
+    path('author/allPosts/<str:author_id>', views.get_posts_author),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
