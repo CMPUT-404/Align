@@ -69,7 +69,7 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
             pkUser = User.objects.get(id=pk)
             pkhost = pkUser.host + '/author/' + str(pk)
             if ('http' not in pkhost):
-                pkhost = 'http://' + pkhost   
+                pkhost = 'https://' + pkhost   
             name = pkUser.displayName
             responseDictionary["author"] = [pkhost, name]
             responseDictionary["requests"] = FriendRequestViewSet.serializer_class.requests(pk)
@@ -242,9 +242,9 @@ class AuthorViewSet(viewsets.ModelViewSet):
             pkhost = pkUser.host + '/author/' + str(pk)
             skhost = skUser.host +'/author/' + str(sk)
             if ('http' not in pkhost):
-                pkhost = 'http://' + pkhost
+                pkhost = 'https://' + pkhost
             if ('http' not in skhost):
-                skhost = 'http://' + skhost
+                skhost = 'https://' + skhost
             responseDictionary["authors"] = [pkhost, skhost]
             response = Response(responseDictionary)
             responseDictionary["friends"] = FriendsSerializer.areFriendsSingle(pk,sk)
@@ -276,7 +276,7 @@ class FollowersViewSet(viewsets.ModelViewSet):
             pkUser = User.objects.get(id=pk)
             pkhost = pkUser.host + '/author/' + str(pk)
             if ('http' not in pkhost):
-                pkhost = 'http://' + pkhost
+                pkhost = 'https://' + pkhost
             responseDictionary["author"] = pkhost
             responseDictionary["followers"] = FollowersViewSet.serializer_class.following(pk)
             response = Response(responseDictionary)

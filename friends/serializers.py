@@ -69,7 +69,7 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                 user = request.authorID
                 userHost = user.host + '/author/' + str(id)
                 if ('http' not in userHost):
-                    userHost = 'http://' + userHost   
+                    userHost = 'https://' + userHost   
                 name = user.displayName
                 requesters.append([userHost, name])
         except:
@@ -90,21 +90,21 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
             try:
                 authorHost = authorUser.host + '/users/' + str(authorUser.id)
                 if ('http' not in authorHost):
-                    authorHost = 'http://' + authorHost  
+                    authorHost = 'https://' + authorHost  
                 # TODO: fix hard coding        
-                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
+                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
             except:
-                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
+                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
             
             try:        
                 friendHost = friendUser.host + '/users/' + str(friendUser.id)
                 if ('http' not in friendHost):
-                    friendHost = 'http://' + friendHost
+                    friendHost = 'https://' + friendHost
                 # TODO: fix hard coding    
-                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
+                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
                     
             except:        
-                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
+                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
                 
             author = {"id": authorHost,
                       "bio": authorUser.bio,
@@ -183,7 +183,7 @@ class FriendsSerializer(serializers.HyperlinkedModelSerializer):
             for friend in friends:
                 host = friend.friend.host
                 if ('http' not in host):
-                    host = 'http://' + host
+                    host = 'https://' + host
                 following.append([host + '/author/' + str(friend.friend.id), friend.friend.displayName])   
                 
             return following
@@ -216,21 +216,21 @@ class FriendsSerializer(serializers.HyperlinkedModelSerializer):
             try:
                 authorHost = authorUser.host + '/users/' + str(authorUser.id)
                 if ('http' not in authorHost):
-                    authorHost = 'http://' + authorHost  
+                    authorHost = 'https://' + authorHost  
                 # TODO: fix hard coding        
-                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
+                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
             except:
-                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
+                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
             
             try:        
                 friendHost = friendUser.host + '/users/' + str(friendUser.id)
                 if ('http' not in friendHost):
-                    friendHost = 'http://' + friendHost
+                    friendHost = 'https://' + friendHost
                 # TODO: fix hard coding    
-                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
+                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
                     
             except:        
-                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
+                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
                 
             author = {"id": authorHost,
                       "bio": authorUser.bio,
@@ -305,13 +305,13 @@ class FollowersSerializer(serializers.HyperlinkedModelSerializer):
             for follow in follows:
                 host = follow.following.host
                 if ('http' not in host):
-                    host = 'http://' + host
+                    host = 'https://' + host
                 following.append([host + '/author/' + str(follow.following.id), follow.following.displayName])
             
             for friend in friends:
                 host = friend.friend.host
                 if ('http' not in host):
-                    host = 'http://' + host
+                    host = 'https://' + host
                 following.append([host + '/author/' + str(friend.friend.id), friend.friend.displayName])
             
             return following     
@@ -332,21 +332,21 @@ class FollowersSerializer(serializers.HyperlinkedModelSerializer):
             try:
                 authorHost = authorUser.host + '/users/' + str(authorUser.id)
                 if ('http' not in authorHost):
-                    authorHost = 'http://' + authorHost  
+                    authorHost = 'https://' + authorHost  
                 # TODO: fix hard coding        
-                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
+                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
             except:
-                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
+                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
             
             try:        
                 friendHost = friendUser.host + '/users/' + str(friendUser.id)
                 if ('http' not in friendHost):
-                    friendHost = 'http://' + friendHost
+                    friendHost = 'https://' + friendHost
                 # TODO: fix hard coding    
-                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
+                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
                     
             except:        
-                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
+                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
                 
             author = {"id": authorHost,
                       "bio": authorUser.bio,
