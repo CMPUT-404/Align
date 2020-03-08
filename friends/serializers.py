@@ -91,7 +91,6 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                 authorHost = authorUser.host + '/users/' + str(authorUser.id)
                 if ('http' not in authorHost):
                     authorHost = 'http://' + authorHost  
-                    
                 # TODO: fix hard coding        
                 authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
             except:
@@ -101,7 +100,6 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                 friendHost = friendUser.host + '/users/' + str(friendUser.id)
                 if ('http' not in friendHost):
                     friendHost = 'http://' + friendHost
-                   
                 # TODO: fix hard coding    
                 friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
                     
@@ -205,7 +203,52 @@ class FriendsSerializer(serializers.HyperlinkedModelSerializer):
                 
         return areFriends        
         
+    @classmethod
+    def list(cls):
         
+        output = []
+        
+        entries = Friends.objects.all()
+        for entry in entries:
+            authorUser = entry.author
+            friendUser = entry.friend
+            
+            try:
+                authorHost = authorUser.host + '/users/' + str(authorUser.id)
+                if ('http' not in authorHost):
+                    authorHost = 'http://' + authorHost  
+                # TODO: fix hard coding        
+                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
+            except:
+                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
+            
+            try:        
+                friendHost = friendUser.host + '/users/' + str(friendUser.id)
+                if ('http' not in friendHost):
+                    friendHost = 'http://' + friendHost
+                # TODO: fix hard coding    
+                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
+                    
+            except:        
+                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
+                
+            author = {"id": authorHost,
+                      "bio": authorUser.bio,
+                      "host": authorUser.host,
+                      "firstName": authorUser.firstName,
+                      "lastName": authorUser.lastName,
+                      "displayName": authorUser.displayName}
+            friend = {"id": friendHost,
+                      "bio": friendUser.bio,
+                      "host": friendUser.host,
+                      "firstName": friendUser.firstName,
+                      "lastName": friendUser.lastName,
+                      "displayName": friendUser.displayName}
+            output.append({"authorID": author, "friendID":friend})
+            
+        return output
+
+    
     class Meta:
         model = Friends
         fields = ['author', 'friend']
@@ -276,6 +319,50 @@ class FollowersSerializer(serializers.HyperlinkedModelSerializer):
         except:
             raise RuntimeError("Unable to retrieve following list")
         
+    @classmethod
+    def list(cls):
+        
+        output = []
+        
+        entries = Followers.objects.all()
+        for entry in entries:
+            authorUser = entry.author
+            friendUser = entry.following
+            
+            try:
+                authorHost = authorUser.host + '/users/' + str(authorUser.id)
+                if ('http' not in authorHost):
+                    authorHost = 'http://' + authorHost  
+                # TODO: fix hard coding        
+                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
+            except:
+                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
+            
+            try:        
+                friendHost = friendUser.host + '/users/' + str(friendUser.id)
+                if ('http' not in friendHost):
+                    friendHost = 'http://' + friendHost
+                # TODO: fix hard coding    
+                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
+                    
+            except:        
+                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
+                
+            author = {"id": authorHost,
+                      "bio": authorUser.bio,
+                      "host": authorUser.host,
+                      "firstName": authorUser.firstName,
+                      "lastName": authorUser.lastName,
+                      "displayName": authorUser.displayName}
+            friend = {"id": friendHost,
+                      "bio": friendUser.bio,
+                      "host": friendUser.host,
+                      "firstName": friendUser.firstName,
+                      "lastName": friendUser.lastName,
+                      "displayName": friendUser.displayName}
+            output.append({"authorID": author, "friendID":friend})
+            
+        return output
     
     class Meta:
         model = Followers
