@@ -292,8 +292,8 @@ class FollowersViewSet(viewsets.ModelViewSet):
                 responseDictionary["json1"] = request.body
                 body = request.body
                 requestJson = json.loads(body)
-                authorID = requestJson["author"].split('/')[-1]             # person requesting deletion
-                friendID = requestJson["following"].split('/')[-1]            # friend getting deleted
+                authorID = requestJson["author"].split('/')[-2]             # person requesting deletion
+                friendID = requestJson["following"].split('/')[-2]            # friend getting deleted
                 responseDictionary["test"] = "point 2"
                 if (authorID == ''):
                     requestJson["author"].split('/')[-2]
