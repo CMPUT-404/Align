@@ -54,9 +54,9 @@ def post_comments(request,post_id):
         #print(post_id)
         try:
             CommentsCreateSerializer.create(request.data,post_id)
-            return HttpResponse("the post has been successfully added")
+            return HttpResponse("the comment has been successfully added")
         except:
-            return HttpResponse("the post has not been added")
+            return HttpResponse("the comment has not been added")
             '''
         serializer = CommentsCreateSerializer(data = request.data)
         serializer.is_valid()

@@ -1,6 +1,7 @@
 from posts.models import Posts
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+import datetime
 User = get_user_model()
 
 #class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -48,7 +49,7 @@ class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
             visibilities=validated_data.get('visibilities', Posts.visibilities),
             #visible_to = vis,
             visible_to = validated_data.get('visible_to', Posts.visible_to),
-            publish = validated_data.get('publish', Posts.publish),
+            publish = str(datetime.datetime.now())
         )
         post.save()
         return True
