@@ -85,6 +85,22 @@ def get_posts(request):
         except:
             return HttpResponse("the post has not been added")
 
+@api_view(['GET', 'POST'])
+def delete_posts_author(request,post_id):
+    factory = APIRequestFactory()
+    requests = factory.get('/')
+    if request.method == 'GET':
+        serializer_context = {
+            'request': Request(requests),
+        }
+        #id = request.data.get('id')
+        #print(id)
+        try:
+            PostsCreateSerializer.delete(post_id)
+            return HttpResponse("the post has been successfully deleted")
+        except:
+            return HttpResponse("the post has not been deleted")
+
 
 @api_view(['GET', 'POST'])
 def get_posts_by_id(request,author_id):

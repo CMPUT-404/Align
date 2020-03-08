@@ -2,6 +2,7 @@ from comments.models import Comments
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from posts.models import Posts
+import datetime
 User = get_user_model()
 
 class CommentsSerializer(serializers.Serializer):
@@ -46,7 +47,8 @@ class CommentsCreateSerializer(serializers.HyperlinkedModelSerializer):
             auth = validated_data.get("auth",Comments.auth),
             root = post,
             comment = validated_data.get('comment', Comments.comment),
-            publish = validated_data.get('publish', Comments.publish),
+            #publish = validated_data.get('publish', Comments.publish),
+            publish = str(datetime.datetime.now()),
             )
         comment.save()
         return True

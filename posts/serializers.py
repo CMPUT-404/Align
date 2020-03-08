@@ -1,6 +1,7 @@
 from posts.models import Posts
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+import datetime
 User = get_user_model()
 
 #class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -48,11 +49,24 @@ class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
             visibilities=validated_data.get('visibilities', Posts.visibilities),
             #visible_to = vis,
             visible_to = validated_data.get('visible_to', Posts.visible_to),
-            publish = validated_data.get('publish', Posts.publish),
+            publish = str(datetime.datetime.now())
         )
         post.save()
         return True
 
+    @classmethod
+    def delete(self, validated_data):
+        # delete friend request
+
+        try:
+            post = Posts.objects.get(id = validated_data)
+            #request = FriendRequests.objects.get(authorID=friend, friendID=author)
+            post.delete()
+        except:
+            return false
+            #if (supress):
+                #return
+            #raise RuntimeError("Unable to delete friend request")
     class Meta:
         model = Posts
         fields = ['title','author', 'description','content','visibilities','visible_to','publish']
