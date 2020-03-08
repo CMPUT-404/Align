@@ -105,39 +105,29 @@ class FriendViewSet(viewsets.ModelViewSet):
                 # swagger
                 body = request.body
                 requestJson = json.loads(body)
-                responseDictionary["test"] = "point 1"
-                responseDictionary["json1"] = request.body
-                authorID = requestJson["author"].split('/')[-1]             # person accepting/declining
-                friendID = requestJson["friend"].split('/')[-1]             # person who sent request
-                responseDictionary["test"] = "point 2"
+                authorID = requestJson["author"].split('/')[-2]             # person accepting/declining
+                friendID = requestJson["friend"].split('/')[-2]             # person who sent request
                 friendStatus = requestJson["friendstatus"]
-                responseDictionary["test"] = "point 3"
                 if (authorID == ''):
                     requestJson["author"].split('/')[-2]
                 if (friendID == ''):
                     requestJson["friend"].split('/')[-2]
-                responseDictionary["test"] = "point 4"
-            except:
+            except Exception as e:
                 # html form
-                responseDictionary["test"] = "point 5"
+                print(e.args)
                 requestJson = request.data
-                responseDictionary["test"] = "point 6"
                 responseDictionary["json2"] = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["friend"].split("/")[-2]
-                responseDictionary["test"] = "point 7"
                 try:
                     friendStatus = requestJson["friendstatus"]
                 except:
                     raise RuntimeError("couldn't get status")
 
-            responseDictionary["test"] = "point 8"
             if (not (friendID and authorID)):
                 raise ValueError("No friendID or authorID was given")
-            responseDictionary["test"] = "point 9"
             validated_data = {"author": authorID, "friend": friendID}
             FriendRequestViewSet.serializer_class.delete(validated_data)    # delete friends request
-            responseDictionary["test"] = "point 10"
             if (friendStatus == "accept"):
                 # create friend
                 FollowersViewSet.serializer_class.delete(validated_data)        # delete following relation
@@ -146,7 +136,6 @@ class FriendViewSet(viewsets.ModelViewSet):
                 validated_data = {"author": friendID, "friend": authorID}
                 FollowersViewSet.serializer_class.delete(validated_data, supress=True)       # delete reverse follower
                 FriendViewSet.serializer_class.create(validated_data)           # create friend
-            responseDictionary["test"] = "point 11"
             response = Response(responseDictionary)
 
         except:
