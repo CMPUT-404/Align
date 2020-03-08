@@ -180,6 +180,11 @@ class FriendViewSet(viewsets.ModelViewSet):
             response = Response(responseDictionary)
 
         return response
+    
+    def list(self, request):
+        # list friend requests with user data
+
+       return Response(FriendViewSet.serializer_class.list())
 
 
 class AuthorViewSet(viewsets.ModelViewSet):
@@ -310,3 +315,8 @@ class FollowersViewSet(viewsets.ModelViewSet):
             response = Response(responseDictionary)
 
         return response
+    
+    def list(self, request):
+        # list friend requests with user data
+
+       return Response(FollowersViewSet.serializer_class.list())
