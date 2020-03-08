@@ -86,18 +86,18 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
         for entry in entries:
             authorUser = entry.authorID
             friendUser = entry.friendID
-            author = {"id":authorUser.id,
-                      "bio":authorUser.bio,
-                      "host":authorUser.host,
-                      "firstName":authorUser.firstName,
-                      "lastName":authorUser.lastName,
-                      "displayName": "Jack"#authorUser.displayName}
-            friend = {"id":friendUser.id,
-                      "bio":friendUser.bio,
-                      "host":friendUser.host,
-                      "firstName":friendUser.firstName,
-                      "lastName":friendUser.lastName,
-                      "displayName":"Jill"#friendUser.displayName}
+            author = {"id": authorUser.id,
+                      "bio": authorUser.bio,
+                      "host": authorUser.host,
+                      "firstName": authorUser.firstName,
+                      "lastName": authorUser.lastName,
+                      "displayName": "Jack"}#authorUser.displayName}
+            friend = {"id": friendUser.id,
+                      "bio": friendUser.bio,
+                      "host": friendUser.host,
+                      "firstName": friendUser.firstName,
+                      "lastName": friendUser.lastName,
+                      "displayName": "Jill"}#friendUser.displayName}
             output.append({"authorID": author, "friendID":friend})
             
         return output
