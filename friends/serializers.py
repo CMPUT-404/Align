@@ -101,10 +101,10 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                 if ('http' not in friendHost):
                     friendHost = 'http://' + friendHost   
                     
-                authorHost = 'http://cloud-align-server.herokuapp.com/author/' + str(friendUser.id)     
+                friendHost = 'http://cloud-align-server.herokuapp.com/author/' + str(friendUser.id)     
                     
             except:        
-                authorHost = 'http://cloud-align-server.herokuapp.com/author/' + str(friendUser.id) 
+                friendHost = 'http://cloud-align-server.herokuapp.com/author/' + str(friendUser.id) 
                 
             author = {"id": authorHost,
                       "bio": authorUser.bio,
