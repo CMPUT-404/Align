@@ -10,7 +10,7 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     bio = models.TextField(max_length=500, null=True, blank=True)
-    host = models.URLField(blank=True, null=True, default="127.0.0.1:8000")  # FIXME HARDCODED HOST
+    host = models.GenericIPAddressField(blank=True, null=True)
     firstName = models.CharField(max_length=20, null=True, blank=True)
     lastName = models.CharField(max_length=20, null=True, blank=True)
     displayName = models.CharField(max_length=40, null=True, blank=True)

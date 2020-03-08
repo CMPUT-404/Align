@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, QueryDict
 
 # Create your views here.
 from django.contrib.auth import get_user_model
@@ -67,13 +67,25 @@ class RegisterView(CreateAPIView):
     serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = UserSerializer(data=request.data, context={'request': request})
+        data = QueryDict.copy(request.data)
+        data["host"] = self.get_client_ip(request)
+        print(data)
+        serializer = UserSerializer(data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             token, created = Token.objects.get_or_create(user=serializer.instance)
             return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
         else:
             return Response(status=400, data={'errors': serializer.errors})
+
+    @staticmethod
+    def get_client_ip(request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
 
 
 # Validate Your User Token
