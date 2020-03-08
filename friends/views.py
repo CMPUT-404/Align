@@ -288,23 +288,29 @@ class FollowersViewSet(viewsets.ModelViewSet):
         try:
             try:
                 # swagger
+                responseDictionary["test"] = "point 1"
                 body = request.body
                 requestJson = json.loads(body)
                 authorID = requestJson["author"].split('/')[-1]             # person requesting deletion
                 friendID = requestJson["following"].split('/')[-1]            # friend getting deleted
+                responseDictionary["test"] = "point 2"
                 if (authorID == ''):
                     requestJson["author"].split('/')[-2]
                 if (friendID == ''):
                     requestJson["following"].split('/')[-2]
+                responseDictionary["test"] = "point 3"
             except:
                 # html form
+                responseDictionary["test"] = "point 4"
                 requestJson = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["following"].split("/")[-2]
+                responseDictionary["test"] = "point 4"
 
             validated_data = {"author": friendID, "friend": authorID}
             FollowersViewSet.serializer_class.delete(validated_data)
             response = Response(responseDictionary)
+            responseDictionary["test"] = "point 5"
 
         except:
             responseDictionary["success"] = False
