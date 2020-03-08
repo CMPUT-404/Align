@@ -41,7 +41,7 @@ class LoginView(APIView):
         username = request.data.get('username', None)
         password = request.data.get('password', None)
         if username is None or password is None:
-            return Response(status=400, data={'message': 'username or password is None'})
+            return Response(status=400, data={'errors': 'username or password is None'})
         if User.objects.filter(username=username).exists():
             user = User.objects.get(username=username)
             if user.check_password(password):
@@ -51,9 +51,9 @@ class LoginView(APIView):
                     Token.objects.create(user=user)
                 return Response({'token': Token.objects.get(user=user).key, 'user': serializer.data})
             else:
-                return Response(status=400, data={'message': 'Username or password is incorrect'})
+                return Response(status=400, data={'errors': 'Username or password is incorrect'})
         else:
-            return Response(status=400, data={'message': 'Username or password is incorrect'})
+            return Response(status=400, data={'errors': 'Username or password is incorrect'})
 
 ''' # ignore me please
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -86,4 +86,4 @@ class RegisterView(CreateAPIView):
             token, created = Token.objects.get_or_create(user=serializer.instance)
             return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
         else:
-            return Response(status=400, data={'status': 'false', 'errors': serializer.errors})
+            return Response(status=400, data={'errors': serializer.errors})
