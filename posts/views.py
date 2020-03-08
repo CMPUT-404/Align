@@ -32,22 +32,53 @@ class PostsViewSet(viewsets.ModelViewSet):
     queryset = Posts.objects.all().filter().order_by("-publish")
     serializer_class = PostsSerializer
 
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        if user.id:
+            queryset = Posts.objects.all().filter().order_by("-publish")
+            serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+            return Response(serializer_class.data)
+        else:
+            queryset = Posts.objects.all().filter(visibilities=True).order_by("-publish")
+            serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+            return Response(serializer_class.data)
 
-# @api_view(['GET'])
-# def get_posts_author(request,author_id):
-#     factory = APIRequestFactory()
-#     requests = factory.get('/')
-#     if request.method == 'GET':
-#         serializer_context = {
-#             'request': Request(requests),
-#         }
+
+@api_view(['GET'])
+def get_posts_author(request,author_id):
+     factory = APIRequestFactory()
+     requests = factory.get('/')
+     if request.method == 'GET':
+         serializer_context = {
+             'request': Request(requests),
+         }
+         #id = request.data.get('id')
+         #print(id)
+         author_obj = User.objects.get(id = author_id)
+         queryset = Posts.objects.all().filter(author = author_obj).order_by("-publish")
+         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
+         #data = serializers.serialize('json', self.get_queryset())
+         return Response(serializer_class.data)
+
+@api_view(['GET'])
+def get_posts_author(request,author_id):
+
+    factory = APIRequestFactory()
+    requests = factory.get('/')
+    if request.method == 'GET':
+        serializer_context = {
+            'request': Request(requests),
+        }
 #         #id = request.data.get('id')
 #         #print(id)
-#         author_obj = User.objects.get(id = author_id)
-#         queryset = Posts.objects.all().filter(author = author_obj).order_by("-publish")
-#         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
-#         #data = serializers.serialize('json', self.get_queryset())
-#         return Response(serializer_class.data)
+        author_obj = User.objects.get(id = author_id)
+        queryset = Posts.objects.all().filter(author = author_obj).order_by("-publish")
+        serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
+        #data = serializers.serialize('json', self.get_queryset())
+        return Response(serializer_class.data)
+    else:
+        HttpResponse.status_code = 403
+        return HttpResponse("All the method other than get is not allowed")
 #
 # @api_view(['GET', 'POST'])
 # def get_posts(request):

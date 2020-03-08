@@ -105,22 +105,24 @@ class FriendViewSet(viewsets.ModelViewSet):
                 # swagger
                 body = request.body
                 requestJson = json.loads(body)
-                authorID = requestJson["author"].split('/')[-1]             # person accepting/declining
-                friendID = requestJson["friend"].split('/')[-1]             # person who sent request
-                friendStatus = requestJson["status"]
+                authorID = requestJson["author"].split('/')[-2]             # person accepting/declining
+                friendID = requestJson["friend"].split('/')[-2]             # person who sent request
+                friendStatus = requestJson["friendstatus"]
                 if (authorID == ''):
                     requestJson["author"].split('/')[-2]
                 if (friendID == ''):
                     requestJson["friend"].split('/')[-2]
-            except:
+            except Exception as e:
                 # html form
+                print(e.args)
                 requestJson = request.data
+                responseDictionary["json2"] = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["friend"].split("/")[-2]
                 try:
-                    friendStatus = requestJson["status"]
+                    friendStatus = requestJson["friendstatus"]
                 except:
-                    friendStatus = "accept"
+                    raise RuntimeError("couldn't get status")
 
             if (not (friendID and authorID)):
                 raise ValueError("No friendID or authorID was given")

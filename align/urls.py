@@ -41,7 +41,7 @@ router.register(r'following', friends_views.FollowersViewSet, basename="followin
 
 
 urlpatterns = [
-    #path('', include('posts.urls')),
+    path('', include('posts.urls')),
     path('', include('comments.urls')),
     path('admin/', admin.site.urls),
     #path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
