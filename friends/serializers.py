@@ -87,11 +87,11 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
             authorUser = entry.authorID
             friendUser = entry.friendID
             
-            authorHost = authorUser.host + '/author/' + str(id)
+            authorHost = authorUser.host + '/author/' + str(authorUser.id)
             if ('http' not in authorHost):
                 authorHost = 'http://' + authorHost  
                     
-            friendHost = friendUser.host + '/author/' + str(id)
+            friendHost = friendUser.host + '/author/' + str(friendUser.id)
             if ('http' not in friendHost):
                 friendHost = 'http://' + friendHost   
             
