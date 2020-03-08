@@ -93,9 +93,9 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                     authorHost = 'http://' + authorHost  
                     
                 # TODO: fix hard coding        
-                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id)     
+                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
             except:
-                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) 
+                authorHost = 'http://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
             
             try:        
                 friendHost = friendUser.host + '/users/' + str(friendUser.id)
@@ -103,10 +103,10 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                     friendHost = 'http://' + friendHost
                    
                 # TODO: fix hard coding    
-                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id)     
+                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
                     
             except:        
-                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) 
+                friendHost = 'http://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
                 
             author = {"id": authorHost,
                       "bio": authorUser.bio,
