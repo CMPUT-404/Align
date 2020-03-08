@@ -289,6 +289,7 @@ class FollowersViewSet(viewsets.ModelViewSet):
             try:
                 # swagger
                 responseDictionary["test"] = "point 1"
+                responseDictionary["json1"] = request.body
                 body = request.body
                 requestJson = json.loads(body)
                 authorID = requestJson["author"].split('/')[-1]             # person requesting deletion
@@ -301,6 +302,7 @@ class FollowersViewSet(viewsets.ModelViewSet):
                 responseDictionary["test"] = "point 3"
             except:
                 # html form
+                responseDictionary["json2"] = request.data
                 responseDictionary["test"] = "point 4"
                 requestJson = request.data
                 authorID = requestJson["author"].split("/")[-2]
