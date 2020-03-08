@@ -22,6 +22,9 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 
@@ -35,6 +38,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
 
 
+# login user
 class LoginView(APIView):
 
     def post(self, request):
@@ -55,6 +59,33 @@ class LoginView(APIView):
         else:
             return Response(status=400, data={'errors': 'Username or password is incorrect'})
 
+# register user
+class RegisterView(CreateAPIView):
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = UserSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            token, created = Token.objects.get_or_create(user=serializer.instance)
+            return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=400, data={'errors': serializer.errors})
+
+
+# Validate Your User Token
+class ValidateView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        return Response(status=200, data={'user': UserSerializer(user, context={'request': request}).data})
+
 ''' # ignore me please
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -73,17 +104,5 @@ class CustomObtainAuthToken(ObtainAuthToken):
 # user = Token.objects.get(key='token string').user
 ###################################################
 
-class RegisterView(CreateAPIView):
-    permission_classes = [
-        permissions.AllowAny
-    ]
-    serializer_class = UserSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = UserSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            token, created = Token.objects.get_or_create(user=serializer.instance)
-            return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=400, data={'errors': serializer.errors})
+

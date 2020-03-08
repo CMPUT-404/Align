@@ -49,4 +49,5 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^users/login$', user_views.LoginView.as_view()),
     url(r'^users/register$', user_views.RegisterView.as_view()),
+    url(r'^users/validate$', user_views.ValidateView.as_view()),
 ]
