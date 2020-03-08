@@ -54,6 +54,19 @@ class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
         post.save()
         return True
 
+    @classmethod
+    def delete(self, validated_data):
+        # delete friend request
+
+        try:
+            post = Posts.objects.get(id = validated_data)
+            #request = FriendRequests.objects.get(authorID=friend, friendID=author)
+            post.delete()
+        except:
+            return false
+            #if (supress):
+                #return
+            #raise RuntimeError("Unable to delete friend request")
     class Meta:
         model = Posts
         fields = ['title','author', 'description','content','visibilities','visible_to','publish']
