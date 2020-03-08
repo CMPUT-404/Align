@@ -9,6 +9,7 @@ class CommentsSerializer(serializers.Serializer):
     id = serializers.SerializerMethodField()
     auth = serializers.SerializerMethodField()
     root = serializers.SerializerMethodField()
+    comment = serializers.SerializerMethodField()
     author_data = serializers.SerializerMethodField()
     contentType = serializers.SerializerMethodField()
 
@@ -23,6 +24,8 @@ class CommentsSerializer(serializers.Serializer):
         return (obj.auth)
     def get_root(self,obj):
         return (obj.root.id)
+    def get_comment(self,obj):
+        return (obj.comment)
 
     def get_author_data(self,obj):
         user = User.objects.get(id = obj.auth)
@@ -53,6 +56,19 @@ class CommentsCreateSerializer(serializers.HyperlinkedModelSerializer):
         comment.save()
         return True
 
+    @classmethod
+    def delete(self, validated_data):
+        # delete friend request
+
+        try:
+            comment = Comments.objects.get(id = validated_data)
+            #request = FriendRequests.objects.get(authorID=friend, friendID=author)
+            comment.delete()
+        except:
+            return false
+            #if (supress):
+                #return
+            #raise RuntimeError("Unable to delete friend request")
     class Meta:
         model = Comments
         fields = ['auth','root','comment','publish']

@@ -78,18 +78,20 @@ def get_posts(request):
         #serializer_context = {
         #    'request': Request(requests)
         #}
-        print(request.data)
+        #print(request.data)
         try:
             PostsCreateSerializer.create(request.data)
             return HttpResponse("the post has been successfully added")
         except:
+            # 406
+            HttpResponse.status_code = 406
             return HttpResponse("the post has not been added")
 
-@api_view(['GET', 'POST'])
+@api_view(['DELETE'])
 def delete_posts_author(request,post_id):
     factory = APIRequestFactory()
     requests = factory.get('/')
-    if request.method == 'GET':
+    if request.method == 'DELETE':
         serializer_context = {
             'request': Request(requests),
         }
@@ -99,6 +101,7 @@ def delete_posts_author(request,post_id):
             PostsCreateSerializer.delete(post_id)
             return HttpResponse("the post has been successfully deleted")
         except:
+            HttpResponse.status_code = 406
             return HttpResponse("the post has not been deleted")
 
 

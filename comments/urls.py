@@ -3,7 +3,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from comments import views
 
 urlpatterns = [
-    path('author/<str:post_id>/comments', views.post_comments),
+    path('posts/<str:post_id>/comments', views.post_comments),
+    path('posts/deleteComment/<str:comment_id>', views.delete_comment),
     #path('snippets/<int:pk>', views.snippet_detail),
 ]
 
