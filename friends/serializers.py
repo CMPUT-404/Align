@@ -91,17 +91,16 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                       "host":authorUser.host,
                       "firstName":authorUser.firstName,
                       "lastName":authorUser.lastName,
-                      "displayName":authorUser.displayName}
+                      "displayName": "Jack"#authorUser.displayName}
             friend = {"id":friendUser.id,
                       "bio":friendUser.bio,
                       "host":friendUser.host,
                       "firstName":friendUser.firstName,
                       "lastName":friendUser.lastName,
-                      "displayName":friendUser.displayName}
+                      "displayName":"Jill"#friendUser.displayName}
             output.append({"authorID": author, "friendID":friend})
             
         return output
-    
     
     class Meta:
         model = FriendRequests
