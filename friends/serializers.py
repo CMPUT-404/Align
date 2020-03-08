@@ -76,7 +76,40 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                 return []
             
         return requesters
+    
+    @classmethod
+    def list(cls):
         
+        output = []
+        
+        entries = FriendRequests.objects.all()
+        for entry in entries:
+            authorUser = entry.authorID
+            friendUser = entry.friendID
+            
+            authorHost = authorUser.host + '/author/' + str(authorUser.id)
+            if ('http' not in authorHost):
+                authorHost = 'http://' + authorHost  
+                    
+            friendHost = friendUser.host + '/author/' + str(friendUser.id)
+            if ('http' not in friendHost):
+                friendHost = 'http://' + friendHost   
+            
+            author = {"id": authorHost,
+                      "bio": authorUser.bio,
+                      "host": authorUser.host,
+                      "firstName": authorUser.firstName,
+                      "lastName": authorUser.lastName,
+                      "displayName": authorUser.displayName}
+            friend = {"id": friendHost,
+                      "bio": friendUser.bio,
+                      "host": friendUser.host,
+                      "firstName": friendUser.firstName,
+                      "lastName": friendUser.lastName,
+                      "displayName": friendUser.displayName}
+            output.append({"authorID": author, "friendID":friend})
+            
+        return output
     
     class Meta:
         model = FriendRequests

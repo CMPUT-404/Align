@@ -10,14 +10,12 @@ from friends.models import Followers
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from posts.models import Posts
-from posts.serializers import PostsSerializer
 from friends.serializers import FriendRequestSerializer
 from friends.serializers import FriendsSerializer
 from friends.serializers import FollowersSerializer
+from rest_framework.authtoken.models import Token
 
 User = get_user_model()
-
 
 class FriendRequestViewSet(viewsets.ModelViewSet):
     """
@@ -80,6 +78,11 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
             response = Response(responseDictionary)
                 
         return response
+
+    def list(self, request):
+        # list friend requests with user data
+
+       return Response(FriendRequestViewSet.serializer_class.list())
 
 
 class FriendViewSet(viewsets.ModelViewSet):
@@ -177,7 +180,6 @@ class FriendViewSet(viewsets.ModelViewSet):
         return response
 
 
-
 class AuthorViewSet(viewsets.ModelViewSet):
     """
     API endpoint that asks a service if anyone in the list is a friend.
@@ -188,9 +190,6 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
     @action(methods=['post', 'get'], detail=True, url_path='friends', url_name='friendInList')
     def friendInList(self, request, pk=None):
-
-        #ID = request.path.split('/')[2]
-        #ID = pk
 
         if (request.method == 'GET'):
             # get friend list of author
@@ -246,7 +245,6 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
         return response
 
-
 class FollowersViewSet(viewsets.ModelViewSet):
     """
     API endpoint that handles followers
@@ -255,13 +253,11 @@ class FollowersViewSet(viewsets.ModelViewSet):
     queryset = Followers.objects.all()
     serializer_class = FollowersSerializer
 
-
     def create(self, request):
         # accept/decline friend request
         responseDictionary = {"query":"following", "author": '', "followers": [], "message": "not implemented yet"}
         response = Response(responseDictionary)
         return response
-
 
     def retrieve(self, request, pk=None):
         # GET /following/authorID
@@ -290,7 +286,7 @@ class FollowersViewSet(viewsets.ModelViewSet):
                 # swagger
                 body = request.body
                 requestJson = json.loads(body)
-                authorID = requestJson["author"].split('/')[-2]             # person requesting deletion
+                authorID = requestJson["author"].split('/')[-2]               # person requesting deletion
                 friendID = requestJson["following"].split('/')[-2]            # friend getting deleted
                 if (authorID == ''):
                     requestJson["author"].split('/')[-2]
