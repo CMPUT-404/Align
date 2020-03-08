@@ -140,7 +140,7 @@ class FriendsSerializer(serializers.HyperlinkedModelSerializer):
                 host = friend.friend.host
                 if ('http' not in host):
                     host = 'http://' + host
-                following.append(host + '/author/' + str(friend.friend.id))   
+                following.append([host + '/author/' + str(friend.friend.id), friend.friend.displayName])   
                 
             return following
         except:
