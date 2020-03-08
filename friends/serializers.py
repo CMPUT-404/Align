@@ -95,18 +95,18 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
             if ('http' not in friendHost):
                 friendHost = 'http://' + friendHost   
             
-            author = {"id": authorUser.id,
+            author = {"id": authorHost,
                       "bio": authorUser.bio,
-                      "host": authorHost,
+                      "host": authorUser.host,
                       "firstName": authorUser.firstName,
                       "lastName": authorUser.lastName,
-                      "displayName": "Jack"}#authorUser.displayName}
-            friend = {"id": friendUser.id,
+                      "displayName": authorUser.displayName}
+            friend = {"id": friendHost,
                       "bio": friendUser.bio,
-                      "host": friendHost,
+                      "host": friendUser.host,
                       "firstName": friendUser.firstName,
                       "lastName": friendUser.lastName,
-                      "displayName": "Jill"}#friendUser.displayName}
+                      "displayName": friendUser.displayName}
             output.append({"authorID": author, "friendID":friend})
             
         return output
