@@ -86,15 +86,24 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
         for entry in entries:
             authorUser = entry.authorID
             friendUser = entry.friendID
+            
+            authorHost = authorUser.host + '/author/' + str(id)
+            if ('http' not in authorHost):
+                authorHost = 'http://' + authorHost  
+                    
+            friendHost = friendUser.host + '/author/' + str(id)
+            if ('http' not in friendHost):
+                friendHost = 'http://' + friendHost   
+            
             author = {"id": authorUser.id,
                       "bio": authorUser.bio,
-                      "host": authorUser.host,
+                      "host": authorHost,
                       "firstName": authorUser.firstName,
                       "lastName": authorUser.lastName,
                       "displayName": "Jack"}#authorUser.displayName}
             friend = {"id": friendUser.id,
                       "bio": friendUser.bio,
-                      "host": friendUser.host,
+                      "host": friendHost,
                       "firstName": friendUser.firstName,
                       "lastName": friendUser.lastName,
                       "displayName": "Jill"}#friendUser.displayName}
