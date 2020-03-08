@@ -10,11 +10,10 @@ from friends.models import Followers
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from posts.models import Posts
-from posts.serializers import PostsSerializer
 from friends.serializers import FriendRequestSerializer
 from friends.serializers import FriendsSerializer
 from friends.serializers import FollowersSerializer
+from rest_framework.authtoken.models import Token
 
 User = get_user_model()
 
@@ -80,6 +79,11 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
             response = Response(responseDictionary)
                 
         return response
+
+    def list(self, request):
+        # list friend requests
+        
+       return Response(FriendRequestViewSet.serializer_class.list())
 
 
 class FriendViewSet(viewsets.ModelViewSet):
@@ -245,7 +249,6 @@ class AuthorViewSet(viewsets.ModelViewSet):
             response = Response(responseDictionary)
 
         return response
-
 
 class FollowersViewSet(viewsets.ModelViewSet):
     """
