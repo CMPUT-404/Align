@@ -156,7 +156,7 @@ class FriendViewSet(viewsets.ModelViewSet):
                 body = request.body
                 requestJson = json.loads(body)
                 authorID = requestJson["author"].split('/')[-2]             # person requesting deletion
-                friendID = requestJson["friends"].split('/')[-2]            # friend getting deleted
+                friendID = requestJson["friend"].split('/')[-2]            # friend getting deleted
                 if (authorID == ''):
                     requestJson["author"].split('/')[-2]
                 if (friendID == ''):
