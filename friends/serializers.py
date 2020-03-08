@@ -88,23 +88,25 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
             friendUser = entry.friendID
             
             try:
-                authorHost = authorUser.host + '/author/' + str(authorUser.id)
+                authorHost = authorUser.host + '/user/' + str(authorUser.id)
                 if ('http' not in authorHost):
                     authorHost = 'http://' + authorHost  
                     
-                authorHost = 'http://cloud-align-server.herokuapp.com/author/' + str(authorUser.id)     
+                # TODO: fix hard coding        
+                authorHost = 'http://cloud-align-server.herokuapp.com/user/' + str(authorUser.id)     
             except:
-                authorHost = 'http://cloud-align-server.herokuapp.com/author/' + str(authorUser.id) 
+                authorHost = 'http://cloud-align-server.herokuapp.com/user/' + str(authorUser.id) 
             
             try:        
-                friendHost = friendUser.host + '/author/' + str(friendUser.id)
+                friendHost = friendUser.host + '/user/' + str(friendUser.id)
                 if ('http' not in friendHost):
-                    friendHost = 'http://' + friendHost   
-                    
-                friendHost = 'http://cloud-align-server.herokuapp.com/author/' + str(friendUser.id)     
+                    friendHost = 'http://' + friendHost
+                   
+                # TODO: fix hard coding    
+                friendHost = 'http://cloud-align-server.herokuapp.com/user/' + str(friendUser.id)     
                     
             except:        
-                friendHost = 'http://cloud-align-server.herokuapp.com/author/' + str(friendUser.id) 
+                friendHost = 'http://cloud-align-server.herokuapp.com/user/' + str(friendUser.id) 
                 
             author = {"id": authorHost,
                       "bio": authorUser.bio,
