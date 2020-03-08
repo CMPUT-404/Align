@@ -319,7 +319,7 @@ class FollowersSerializer(serializers.HyperlinkedModelSerializer):
         except:
             raise RuntimeError("Unable to retrieve following list")
         
-     @classmethod
+    @classmethod
     def list(cls):
         
         output = []

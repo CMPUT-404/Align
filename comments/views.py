@@ -51,11 +51,12 @@ def post_comments(request,post_id):
         #print("____________")
         #print(request.data)
         #print("____________")
-        #print(post_id)
+        print(post_id)
         try:
             CommentsCreateSerializer.create(request.data,post_id)
             return HttpResponse("the comment has been successfully added")
         except:
+            HttpResponse.status_code = 406
             return HttpResponse("the comment has not been added")
             '''
         serializer = CommentsCreateSerializer(data = request.data)
@@ -67,3 +68,22 @@ def post_comments(request,post_id):
         else:
             return HttpResponse("the post has not been added")
             '''
+
+@api_view(['DELETE'])
+# delete
+def delete_comment(request,comment_id):
+    factory = APIRequestFactory()
+    requests = factory.get('/')
+    if request.method == 'DELETE':
+        serializer_context = {
+            'request': Request(requests),
+        }
+        #id = request.data.get('post_id')
+        print(comment_id)
+        try:
+            CommentsCreateSerializer.delete(comment_id)
+            return HttpResponse("the comment has been successfully deleted")
+        except:
+            # 406
+            HttpResponse.status_code = 406
+            return HttpResponse("the comment has not been deleted")
