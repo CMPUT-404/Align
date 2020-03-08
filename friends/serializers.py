@@ -58,44 +58,25 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
                 return
             raise RuntimeError("Unable to delete friend request")
         
-    
     @classmethod
-    def friends(cls, ID):
-        # ID is author's ID
-        # finds author's friends
-        # returns a list of friends of authorid=pk as a list containing the friends url
+    def requests(cls, id):
         
-        results = FriendRequests.objects.filter(authorID=ID)
-        friends = []
-
-        for result in results:
-            if (FriendRequests.objects.filter(authorID=result.friendID.id, friendID=ID).exists()):
-                userData = User.objects.filter(id=result.friendID.id).first()
-                friendhost = userData.host if (userData.host[-1] != '/') else (userData.host[:-1])
-                if ('http' not in friendhost):
-                    friendhost = 'http://' + friendhost
-                friends.append(friendhost + '/author/' + str(userData.id))
-                
-        return friends
-    
-    @classmethod
-    def listFriends(cls, authorID, authorHostList):
-        # ID is author's ID
-        # find friend with list
-        # returns a list of friend hostnames that were in the list
-                
-        if (not len(authorHostList)):
-            return []
+        requesters = []
         
-        friends = set()
-        
-        authorIDfriends = FriendRequestSerializer.friends(authorID) # ID's entire friend's list
-        # check if any in list is in authors friend's list
-        for potentialFriend in authorHostList:
-            if (potentialFriend in authorIDfriends):
-                friends.add(potentialFriend)
+        try:
+            requests = FriendRequests.objects.filter(friendID=id)
+            for request in requests:
+                user = request.authorID
+                userHost = user.host + '/author/' + str(id)
+                if ('http' not in userHost):
+                    userHost = 'http://' + userHost   
+                name = user.displayName
+                requesters.append([userHost, name])
+        except:
+                return []
             
-        return list(friends)
+        return requesters
+        
     
     class Meta:
         model = FriendRequests
@@ -236,13 +217,13 @@ class FollowersSerializer(serializers.HyperlinkedModelSerializer):
                 host = follow.following.host
                 if ('http' not in host):
                     host = 'http://' + host
-                following.append(host + '/author/' + str(follow.following.id))
+                following.append([host + '/author/' + str(follow.following.id), follow.following.displayName])
             
             for friend in friends:
                 host = friend.friend.host
                 if ('http' not in host):
                     host = 'http://' + host
-                following.append(host + '/author/' + str(friend.friend.id))
+                following.append([host + '/author/' + str(friend.friend.id), friend.friend.displayName])
             
             return following     
         
