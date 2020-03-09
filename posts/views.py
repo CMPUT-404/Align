@@ -39,7 +39,7 @@ class PostsViewSet(viewsets.ModelViewSet):
             serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
             return Response(serializer_class.data)
         else:
-            queryset = Posts.objects.all().filter(Q(visibilities = True)).order_by("-publish")
+            queryset = Posts.objects.all().filter(visibilities = True).order_by("-publish")
             serializer_class = PostsSerializer(instance = queryset, context={'request': request}, many=True)
             return Response(serializer_class.data)
 
@@ -72,7 +72,7 @@ def get_posts(request,author_id):
         id = request.data.get('id')
 #         #print(id)
         author_obj = User.objects.get(id = author_id)
-        queryset = Posts.objects.all().filter(author = author_obj).filter(Q(visibilities = True)|Q(visible_to__icontains = id)).order_by("-publish")
+        queryset = Posts.objects.all().filter(author = author_obj).filter(visibilities = True).order_by("-publish")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         #data = serializers.serialize('json', self.get_queryset())
         return Response(serializer_class.data)

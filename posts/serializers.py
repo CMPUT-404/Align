@@ -24,7 +24,7 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_contentType(self,obj):
         return ("text/plain")
-
+        '''
     def create(self, obj):
         if obj["visible_to"] == "":
             visible_list = obj["author"].id
@@ -51,7 +51,7 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
         else:
             visible_list = str(obj.author.id) + "," + obj.visible_to
         return visible_list
-
+'''
 
 class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
     @classmethod
