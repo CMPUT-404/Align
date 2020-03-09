@@ -184,7 +184,7 @@ class FriendsSerializer(serializers.HyperlinkedModelSerializer):
                 host = friend.friend.host
                 if ('http' not in host):
                     host = 'https://' + host
-                following.append([host + '/author/' + str(friend.friend.id), friend.friend.displayName])   
+                following.append([host + '/author/' + str(friend.friend.id) + '/', friend.friend.displayName])   
                 
             return following
         except:
@@ -197,8 +197,12 @@ class FriendsSerializer(serializers.HyperlinkedModelSerializer):
         friends = FriendsSerializer.friendsList(author)         # list of authors friends
         areFriends = []
         
+        friends_modified=[]
+        for friend in friends:
+            friends_modified.append(friend[0])
+                
         for friend in friendList:
-            if friend in friends:
+            if friend in friends_modified:
                 areFriends.append(friend)
                 
         return areFriends        

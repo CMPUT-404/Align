@@ -116,7 +116,6 @@ class FriendViewSet(viewsets.ModelViewSet):
                 # html form
                 print(e.args)
                 requestJson = request.data
-                responseDictionary["json2"] = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["friend"].split("/")[-2]
                 try:
@@ -217,7 +216,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
                 # swagger
                 body = request.body
                 requestJson = json.loads(body)
-                pk = requestJson["author"]
+                responseDictionary["author"] = requestJson["author"]
                 listOfFriends = requestJson["authors"]
                 responseDictionary["authors"] = FriendsSerializer.areFriendsMany(pk, listOfFriends)
                 response = Response(responseDictionary)
