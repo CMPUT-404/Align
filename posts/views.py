@@ -39,7 +39,7 @@ class PostsViewSet(viewsets.ModelViewSet):
             serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
             return Response(serializer_class.data)
         else:
-            queryset = Posts.objects.all().filter(Qvisibilities = True).order_by("-publish")
+            queryset = Posts.objects.all().filter(Q(visibilities = True)).order_by("-publish")
             serializer_class = PostsSerializer(instance = queryset, context={'request': request}, many=True)
             return Response(serializer_class.data)
 
