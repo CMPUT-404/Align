@@ -27,9 +27,10 @@ class AccountTests(APITestCase):
     # Test
     # POST /users/register
     # POST /users/login
-    # GET /user/
-    # GET /user/<id>
-    # PATCH /user/<id>
+    # GET /users/
+    # GET /users/<id>
+    # PATCH /users/<id>
+    # GET /users/validate
     def test_user(self):
         self.assertEqual(User.objects.count(), 0)
         url = "/users/register"
@@ -77,3 +78,11 @@ class AccountTests(APITestCase):
         self.assertTrue(response.data["username"] == 'new_user_name')
         self.assertTrue(response.data["bio"] == "what's up")
 
+        url = "/users/validate"
+        response = self.client.get(url)
+        print("###GET /users/validate###")
+        pprint.pprint(response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['user']["host"] == "127.0.0.1")
+        self.assertTrue(response.data['user']["username"] == 'new_user_name')
+        self.assertTrue(response.data['user']["bio"] == "what's up")
