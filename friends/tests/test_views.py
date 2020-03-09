@@ -117,21 +117,4 @@ class FriendsFollowsAPITest(APITestCase):
         self.assertEqual(FriendRequests.objects.count(), 0)
         self.assertEqual(Friends.objects.count(), 0)
         self.assertEqual(Followers.objects.count(), 1)
-        
-        
-    def test_followersDelete(self):
-        self.test_friendsDelete()
-        data = {"query": "delete following",
-                "author": "http://localhost/author/" + str(self.author.id) + '/',
-                "friend": "http://localhost/author/" + str(self.friend.id) + '/'}
-        url = "/following/delete/"
-        response = self.client.post(url, data, format="json")
-        print(response.data)
-        self.assertEqual(Followers.objects.count(), 0)
-        
-        
-        
-        
-        
-        
-        
+               
