@@ -116,7 +116,6 @@ class FriendViewSet(viewsets.ModelViewSet):
                 # html form
                 print(e.args)
                 requestJson = request.data
-                responseDictionary["json2"] = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["friend"].split("/")[-2]
                 try:
@@ -156,7 +155,7 @@ class FriendViewSet(viewsets.ModelViewSet):
                 body = request.body
                 requestJson = json.loads(body)
                 authorID = requestJson["author"].split('/')[-2]             # person requesting deletion
-                friendID = requestJson["friends"].split('/')[-2]            # friend getting deleted
+                friendID = requestJson["friend"].split('/')[-2]            # friend getting deleted
                 if (authorID == ''):
                     requestJson["author"].split('/')[-2]
                 if (friendID == ''):
@@ -302,7 +301,6 @@ class FollowersViewSet(viewsets.ModelViewSet):
                     requestJson["following"].split('/')[-2]
             except:
                 # html form
-                responseDictionary["json2"] = request.data
                 requestJson = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["following"].split("/")[-2]

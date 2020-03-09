@@ -71,13 +71,12 @@ class FriendRequestAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(FriendRequests.objects.count(), 0) 
 
-class FriendsAPITest(APITestCase):
+class FriendsFollowsAPITest(APITestCase):
 
     def setUp(self):
         self.author = User.objects.create(bio="bio", host="http://localhost:8000", firstName="Send", lastName="Request", displayName="send", username="Sending", github="http://github.com")
         self.friend = User.objects.create(bio="bio", host="http://localhost:8000", firstName="Get", lastName="Request", displayName="get", username="Getting", github="http://github.com")
     
-    def test_friendsDatabase(self):
         self.assertEqual(Friends.objects.count(), 0)
         self.assertEqual(FriendRequests.objects.count(), 0)
         url = "/friendrequest/"
@@ -104,8 +103,35 @@ class FriendsAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(FriendRequests.objects.count(), 0)
         self.assertEqual(Friends.objects.count(), 2)
-
-
-
-
-
+    
+    def test_friendsDelete(self):
+        
+        self.assertEqual(Followers.objects.count(), 0)
+        data = {"query": "frienddelete",
+                "author": "http://localhost/author/" + str(self.friend.id) + '/',
+                "friend": "http://localhost/author/" + str(self.author.id) + '/'}
+        url = "/friend/delete/"
+        response = self.client.post(url, data, format="json")
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(FriendRequests.objects.count(), 0)
+        self.assertEqual(Friends.objects.count(), 0)
+        self.assertEqual(Followers.objects.count(), 1)
+        
+        
+    def test_followersDelete(self):
+        self.test_friendsDelete()
+        data = {"query": "delete following",
+                "author": "http://localhost/author/" + str(self.author.id) + '/',
+                "friend": "http://localhost/author/" + str(self.friend.id) + '/'}
+        url = "/following/delete/"
+        response = self.client.post(url, data, format="json")
+        print(response.data)
+        self.assertEqual(Followers.objects.count(), 0)
+        
+        
+        
+        
+        
+        
+        
