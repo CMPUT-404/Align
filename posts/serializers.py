@@ -12,6 +12,7 @@ User = get_user_model()
 class PostsSerializer(serializers.HyperlinkedModelSerializer):
     author_data = serializers.SerializerMethodField()
     contentType = serializers.SerializerMethodField()
+    #visible = serializers.SerializerMethodField()
     class Meta:
         model = Posts
         fields = ['id','title','author','author_data', 'description','contentType','content','categories','visibilities','visible_to','publish']
@@ -24,6 +25,34 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
     def get_contentType(self,obj):
         return ("text/plain")
 
+    def create(self, obj):
+        if obj["visible_to"] == "":
+            visible_list = obj["author"].id
+        else:
+            visible_list = str(obj["author"].id) + "," + obj["visible_to"]
+
+        post = Posts(
+            title=obj["title"],
+            author = obj["author"],
+            #author=validated_data.get('author', Posts.author),
+            description=obj["description"],
+            content=obj["content"],
+            visibilities=obj["visibilities"],
+            visible_to = visible_list,
+            #visible_to = validated_data.get('visible_to', Posts.visible_to),
+            publish = str(datetime.datetime.now())
+        )
+        post.save()
+        return post
+
+    def get_visible(self,obj):
+        if obj.visible_to == "":
+            visible_list = obj.author.id
+        else:
+            visible_list = str(obj.author.id) + "," + obj.visible_to
+        return visible_list
+
+
 class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
     @classmethod
     def create(self, validated_data):
@@ -35,7 +64,6 @@ class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
         else:
             vis = validated_data.get('visible_to', Posts.visible_to) + "," + author_id
             '''
-
         #print(author_obj)
         #validated_data['author'] = author_obj
         #print("__________________________________")
