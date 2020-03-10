@@ -141,7 +141,6 @@ class FriendViewSet(viewsets.ModelViewSet):
                 # html form
                 print(e.args)
                 requestJson = request.data
-                responseDictionary["json2"] = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["friend"].split("/")[-2]
                 try:
@@ -206,7 +205,6 @@ class FriendViewSet(viewsets.ModelViewSet):
 
         return response
     
-    
     @action(methods=['get'], detail=False, url_path='user/(?P<sk>[^/.]+)', url_name='friendList')
     def friendList(self, request, pk=None, sk=None): 
         responseDictionary = {"query":"friends", "author": {}, "authors": []}
@@ -227,9 +225,8 @@ class FriendViewSet(viewsets.ModelViewSet):
             response = Response(responseDictionary)
         return response
     
-    
     def list(self, request):
-        # list friend requests with user data
+        # list friends with user data
 
        return Response(FriendViewSet.serializer_class.list())
 
@@ -348,7 +345,6 @@ class FollowersViewSet(viewsets.ModelViewSet):
                     requestJson["following"].split('/')[-2]
             except:
                 # html form
-                responseDictionary["json2"] = request.data
                 requestJson = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["following"].split("/")[-2]
