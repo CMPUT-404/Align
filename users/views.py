@@ -1,3 +1,4 @@
+import copy
 from django.shortcuts import render
 from django.http import HttpResponse, QueryDict
 
@@ -67,7 +68,8 @@ class RegisterView(CreateAPIView):
     serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
-        data = QueryDict.copy(request.data)
+        #data = QueryDict.copy(request.data)
+        data = copy.deepcopy(request.data)
         data["host"] = self.get_client_ip(request)
         print(data)
         serializer = UserSerializer(data=data, context={'request': request})
