@@ -197,9 +197,15 @@ class FriendsSerializer(serializers.HyperlinkedModelSerializer):
         friends = FriendsSerializer.friendsList(author)         # list of authors friends
         areFriends = []
         
+        friends_modified=[]
+        for friend in friends:
+            aFriend = friend[0] if (friend[0][-1] == '/') else (friend[0] + '/')
+            friends_modified.append(aFriend)
+                
         for friend in friendList:
-            if friend in friends:
-                areFriends.append(friend)
+            aFriend = friend if (friend[-1] == '/') else (friend + '/')
+            if aFriend in friends_modified:
+                areFriends.append(aFriend)
                 
         return areFriends        
         
