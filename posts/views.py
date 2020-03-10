@@ -39,8 +39,8 @@ class PostsViewSet(viewsets.ModelViewSet):
             serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
             return Response(serializer_class.data)
         else:
-            queryset = Posts.objects.all().filter(visibilities=True).order_by("-publish")
-            serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+            queryset = Posts.objects.all().filter(visibilities = True).order_by("-publish")
+            serializer_class = PostsSerializer(instance = queryset, context={'request': request}, many=True)
             return Response(serializer_class.data)
 
 
@@ -61,7 +61,7 @@ def get_posts_author(request,author_id):
          return Response(serializer_class.data)
 
 @api_view(['GET'])
-def get_posts_author(request,author_id):
+def get_posts(request,author_id):
 
     factory = APIRequestFactory()
     requests = factory.get('/')
@@ -69,10 +69,10 @@ def get_posts_author(request,author_id):
         serializer_context = {
             'request': Request(requests),
         }
-#         #id = request.data.get('id')
+        id = request.data.get('id')
 #         #print(id)
         author_obj = User.objects.get(id = author_id)
-        queryset = Posts.objects.all().filter(author = author_obj).order_by("-publish")
+        queryset = Posts.objects.all().filter(author = author_obj).filter(visibilities = True).order_by("-publish")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         #data = serializers.serialize('json', self.get_queryset())
         return Response(serializer_class.data)
