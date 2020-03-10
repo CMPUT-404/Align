@@ -67,11 +67,11 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
             requests = FriendRequests.objects.filter(friendID=id)
             for request in requests:
                 user = request.authorID
-                userHost = user.host + '/author/' + str(id)
-                if ('http' not in userHost):
-                    userHost = 'https://' + userHost   
+                #userHost = user.host + '/author/' + str(user.id)
+                #if ('http' not in userHost):
+                #    userHost = 'https://' + userHost   
                 name = user.displayName
-                requesters.append([userHost, name])
+                requesters.append([user.id, name])
         except:
                 return []
             

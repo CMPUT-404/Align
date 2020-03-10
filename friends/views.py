@@ -90,10 +90,13 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
             if ('http' not in pkhost):
                 pkhost = 'https://' + pkhost   
             name = pkUser.displayName
-            responseDictionary["author"] = [pkhost, name]
-            responseDictionary["requests"] = FriendRequestViewSet.serializer_class.requests(sk)
+            responseDictionary["author"] = [sk, name]
+            requests = FriendRequestViewSet.serializer_class.requests(sk)
             responseDictionary["author"] = {"id":responseDictionary["author"][0], "displayName":responseDictionary["author"][1]}
-            responseDictionary["requests"] = {"id": responseDictionary["requests"][0][0], "displayName": responseDictionary["requests"][0][1]}
+            requestList = []
+            for aRequest in requests:
+                requestList.append({"id": aRequest[0], "displayName": aRequest[1]})
+            responseDictionary["requests"] = requestList
             response = Response(responseDictionary)
         except:
             raise
@@ -214,11 +217,13 @@ class FriendViewSet(viewsets.ModelViewSet):
             if ('http' not in pkhost):
                 pkhost = 'https://' + pkhost   
             name = pkUser.displayName
-            responseDictionary["author"] = {"id": pkhost, "displayName" :name}
+            responseDictionary["author"] = {"id": sk, "displayName" :name}
             alist = FriendsSerializer.friendsList(sk)
             authors = []
             for friend in alist:
-                authors.append({"id": friend[0], "displayName": friend[1]})
+                idNum = friend[0] if (friend[0][-1] == '/') else (friend[0] + '/')
+                idNum = idNum.split('/')[-2]
+                authors.append({"id": idNum, "displayName": friend[1]})
             responseDictionary["authors"] = authors    
             response = Response(responseDictionary)
         except:
@@ -369,11 +374,13 @@ class FollowersViewSet(viewsets.ModelViewSet):
             pkhost = pkUser.host + '/author/' + str(sk)
             if ('http' not in pkhost):
                 pkhost = 'https://' + pkhost
-            responseDictionary["author"] = {"id":pkhost, "displayName": pkUser.displayName}
+            responseDictionary["author"] = {"id":sk, "displayName": pkUser.displayName}
             followersList = FollowersViewSet.serializer_class.following(sk)
             followers = []
             for follow in followersList:
-                followers.append({"id": follow[0], "displayName": follow[1]})    
+                idNum = follow[0] if (follow[0][-1] == '/') else (follow[0] + '/')
+                idNum = idNum.split('/')[-2]
+                followers.append({"id": idNum, "displayName": follow[1]})    
             responseDictionary["followers"] = followers    
             response = Response(responseDictionary)
         except:
