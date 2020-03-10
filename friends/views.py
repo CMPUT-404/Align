@@ -79,6 +79,31 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
                 
         return response
 
+    @action(methods=['get'], detail=False, url_path='user/(?P<sk>[^/.]+)', url_name='friendrequestList')
+    def friendRequestList(self, request, pk=None, sk=None):
+        
+        responseDictionary = {"query":"friend request list", "author": [], "requests": []}
+        
+        try:
+            pkUser = User.objects.get(id=sk)
+            pkhost = pkUser.host + '/author/' + str(sk)
+            if ('http' not in pkhost):
+                pkhost = 'https://' + pkhost   
+            name = pkUser.displayName
+            responseDictionary["author"] = [pkhost, name]
+            responseDictionary["requests"] = FriendRequestViewSet.serializer_class.requests(sk)
+            responseDictionary["author"] = {"id":responseDictionary["author"][0], "displayName":responseDictionary["author"][1]}
+            responseDictionary["requests"] = {"id": responseDictionary["requests"][0][0], "displayName": responseDictionary["requests"][0][1]}
+            response = Response(responseDictionary)
+        except:
+            raise
+            response = Response(responseDictionary)
+                
+        return response
+
+
+
+
     def list(self, request):
         # list friend requests with user data
 
@@ -116,6 +141,7 @@ class FriendViewSet(viewsets.ModelViewSet):
                 # html form
                 print(e.args)
                 requestJson = request.data
+                responseDictionary["json2"] = request.data
                 authorID = requestJson["author"].split("/")[-2]
                 friendID = requestJson["friend"].split("/")[-2]
                 try:
@@ -180,6 +206,28 @@ class FriendViewSet(viewsets.ModelViewSet):
 
         return response
     
+    
+    @action(methods=['get'], detail=False, url_path='user/(?P<sk>[^/.]+)', url_name='friendList')
+    def friendList(self, request, pk=None, sk=None): 
+        responseDictionary = {"query":"friends", "author": {}, "authors": []}
+        try:
+            pkUser = User.objects.get(id=sk)
+            pkhost = pkUser.host + '/author/' + str(sk)
+            if ('http' not in pkhost):
+                pkhost = 'https://' + pkhost   
+            name = pkUser.displayName
+            responseDictionary["author"] = {"id": pkhost, "displayName" :name}
+            alist = FriendsSerializer.friendsList(sk)
+            authors = []
+            for friend in alist:
+                authors.append({"id": friend[0], "displayName": friend[1]})
+            responseDictionary["authors"] = authors    
+            response = Response(responseDictionary)
+        except:
+            response = Response(responseDictionary)
+        return response
+    
+    
     def list(self, request):
         # list friend requests with user data
 
@@ -216,7 +264,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
                 # swagger
                 body = request.body
                 requestJson = json.loads(body)
-                responseDictionary["author"] = requestJson["author"]
+                pk = requestJson["author"]
                 listOfFriends = requestJson["authors"]
                 responseDictionary["authors"] = FriendsSerializer.areFriendsMany(pk, listOfFriends)
                 response = Response(responseDictionary)
@@ -315,7 +363,31 @@ class FollowersViewSet(viewsets.ModelViewSet):
 
         return response
     
+    @action(methods=['get'], detail=False, url_path='user/(?P<sk>[^/.]+)', url_name='followList')
+    def followList(self, request, pk=None, sk=None): 
+        
+        responseDictionary = {"query":"following", "author": sk, "followers": []}
+
+        try:
+            pkUser = User.objects.get(id=sk)
+            pkhost = pkUser.host + '/author/' + str(sk)
+            if ('http' not in pkhost):
+                pkhost = 'https://' + pkhost
+            responseDictionary["author"] = {"id":pkhost, "displayName": pkUser.displayName}
+            followersList = FollowersViewSet.serializer_class.following(sk)
+            followers = []
+            for follow in followersList:
+                followers.append({"id": follow[0], "displayName": follow[1]})    
+            responseDictionary["followers"] = followers    
+            response = Response(responseDictionary)
+        except:
+            raise
+            response = Response(responseDictionary)
+        return response
+    
+    
+    
     def list(self, request):
-        # list friend requests with user data
+        # list of follower with user data
 
        return Response(FollowersViewSet.serializer_class.list())
