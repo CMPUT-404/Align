@@ -29,5 +29,5 @@ class User(AbstractUser):
             elif self.lastName:
                 self.displayName = self.lastName
             else:
-                self.displayName = self.id
+                self.displayName = self.username
 
