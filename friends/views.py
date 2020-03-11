@@ -66,13 +66,14 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
         responseDictionary = {"query":"friend request list", "author": [], "requests": []}
         
         try:
-            pkUser = User.objects.get(id=pk)
-            pkhost = pkUser.host + '/author/' + str(pk)
-            if ('http' not in pkhost):
-                pkhost = 'https://' + pkhost   
+            pkUser = User.objects.get(id=pk) 
             name = pkUser.displayName
-            responseDictionary["author"] = [pkhost, name]
-            responseDictionary["requests"] = FriendRequestViewSet.serializer_class.requests(pk)
+            responseDictionary["author"] = { "id": pkUser.id, "displayName": name}
+            requests = FriendRequestViewSet.serializer_class.requests(pk)
+            requestList = []
+            for aRequest in requests:
+                requestList.append({"id": aRequest[0], "displayName": aRequest[1]})
+            responseDictionary["requests"] = requestList
             response = Response(responseDictionary)
         except:
             response = Response(responseDictionary)
@@ -86,26 +87,18 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
         
         try:
             pkUser = User.objects.get(id=sk)
-            pkhost = pkUser.host + '/author/' + str(sk)
-            if ('http' not in pkhost):
-                pkhost = 'https://' + pkhost   
             name = pkUser.displayName
-            responseDictionary["author"] = [sk, name]
+            responseDictionary["author"] = {"id":sk, "displayName":name}
             requests = FriendRequestViewSet.serializer_class.requests(sk)
-            responseDictionary["author"] = {"id":responseDictionary["author"][0], "displayName":responseDictionary["author"][1]}
             requestList = []
             for aRequest in requests:
                 requestList.append({"id": aRequest[0], "displayName": aRequest[1]})
             responseDictionary["requests"] = requestList
             response = Response(responseDictionary)
         except:
-            raise
             response = Response(responseDictionary)
                 
         return response
-
-
-
 
     def list(self, request):
         # list friend requests with user data
@@ -133,23 +126,15 @@ class FriendViewSet(viewsets.ModelViewSet):
                 # swagger
                 body = request.body
                 requestJson = json.loads(body)
-                authorID = requestJson["author"].split('/')[-2]             # person accepting/declining
-                friendID = requestJson["friend"].split('/')[-2]             # person who sent request
+                authorID = requestJson["author"]             # person accepting/declining
+                friendID = requestJson["friend"]             # person who sent request
                 friendStatus = requestJson["friendstatus"]
-                if (authorID == ''):
-                    requestJson["author"].split('/')[-2]
-                if (friendID == ''):
-                    requestJson["friend"].split('/')[-2]
             except Exception as e:
                 # html form
-                print(e.args)
                 requestJson = request.data
-                authorID = requestJson["author"].split("/")[-2]
-                friendID = requestJson["friend"].split("/")[-2]
-                try:
-                    friendStatus = requestJson["friendstatus"]
-                except:
-                    raise RuntimeError("couldn't get status")
+                authorID = requestJson["author"]
+                friendID = requestJson["friend"]
+                friendStatus = requestJson["friendstatus"]
 
             if (not (friendID and authorID)):
                 raise ValueError("No friendID or authorID was given")
@@ -182,17 +167,13 @@ class FriendViewSet(viewsets.ModelViewSet):
                 # swagger
                 body = request.body
                 requestJson = json.loads(body)
-                authorID = requestJson["author"].split('/')[-2]             # person requesting deletion
-                friendID = requestJson["friend"].split('/')[-2]            # friend getting deleted
-                if (authorID == ''):
-                    requestJson["author"].split('/')[-2]
-                if (friendID == ''):
-                    requestJson["friend"].split('/')[-2]
+                authorID = requestJson["author"]           # person requesting deletion
+                friendID = requestJson["friend"]           # friend getting deleted
             except:
                 # html form
                 requestJson = request.data
-                authorID = requestJson["author"].split("/")[-2]
-                friendID = requestJson["friend"].split("/")[-2]
+                authorID = requestJson["author"]
+                friendID = requestJson["friend"]
 
             if (not (friendID and authorID)):
                 raise ValueError("No friendID or authorID was given")
@@ -212,10 +193,7 @@ class FriendViewSet(viewsets.ModelViewSet):
     def friendList(self, request, pk=None, sk=None): 
         responseDictionary = {"query":"friends", "author": {}, "authors": []}
         try:
-            pkUser = User.objects.get(id=sk)
-            pkhost = pkUser.host + '/author/' + str(sk)
-            if ('http' not in pkhost):
-                pkhost = 'https://' + pkhost   
+            pkUser = User.objects.get(id=sk) 
             name = pkUser.displayName
             responseDictionary["author"] = {"id": sk, "displayName" :name}
             alist = FriendsSerializer.friendsList(sk)
@@ -321,11 +299,7 @@ class FollowersViewSet(viewsets.ModelViewSet):
         responseDictionary = {"query":"following", "author": pk, "followers": []}
 
         try:
-            pkUser = User.objects.get(id=pk)
-            pkhost = pkUser.host + '/author/' + str(pk)
-            if ('http' not in pkhost):
-                pkhost = 'https://' + pkhost
-            responseDictionary["author"] = pkhost
+            responseDictionary["author"] = pk
             responseDictionary["followers"] = FollowersViewSet.serializer_class.following(pk)
             response = Response(responseDictionary)
         except:
@@ -342,17 +316,13 @@ class FollowersViewSet(viewsets.ModelViewSet):
                 # swagger
                 body = request.body
                 requestJson = json.loads(body)
-                authorID = requestJson["author"].split('/')[-2]               # person requesting deletion
-                friendID = requestJson["following"].split('/')[-2]            # friend getting deleted
-                if (authorID == ''):
-                    requestJson["author"].split('/')[-2]
-                if (friendID == ''):
-                    requestJson["following"].split('/')[-2]
+                authorID = requestJson["author"]               # person requesting deletion
+                friendID = requestJson["following"]            # friend getting deleted
             except:
                 # html form
                 requestJson = request.data
-                authorID = requestJson["author"].split("/")[-2]
-                friendID = requestJson["following"].split("/")[-2]
+                authorID = requestJson["author"]
+                friendID = requestJson["following"]
 
             validated_data = {"author": friendID, "friend": authorID}
             FollowersViewSet.serializer_class.delete(validated_data)
@@ -371,24 +341,12 @@ class FollowersViewSet(viewsets.ModelViewSet):
 
         try:
             pkUser = User.objects.get(id=sk)
-            pkhost = pkUser.host + '/author/' + str(sk)
-            if ('http' not in pkhost):
-                pkhost = 'https://' + pkhost
             responseDictionary["author"] = {"id":sk, "displayName": pkUser.displayName}
-            followersList = FollowersViewSet.serializer_class.following(sk)
-            followers = []
-            for follow in followersList:
-                idNum = follow[0] if (follow[0][-1] == '/') else (follow[0] + '/')
-                idNum = idNum.split('/')[-2]
-                followers.append({"id": idNum, "displayName": follow[1]})    
-            responseDictionary["followers"] = followers    
+            responseDictionary["followers"] = FollowersViewSet.serializer_class.following(sk)
             response = Response(responseDictionary)
         except:
-            raise
             response = Response(responseDictionary)
         return response
-    
-    
     
     def list(self, request):
         # list of follower with user data
