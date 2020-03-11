@@ -86,38 +86,21 @@ class FriendRequestSerializer(serializers.HyperlinkedModelSerializer):
         for entry in entries:
             authorUser = entry.authorID
             friendUser = entry.friendID
-            
-            try:
-                authorHost = authorUser.host + '/users/' + str(authorUser.id)
-                if ('http' not in authorHost):
-                    authorHost = 'https://' + authorHost  
-                # TODO: fix hard coding        
-                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
-            except:
-                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
-            
-            try:        
-                friendHost = friendUser.host + '/users/' + str(friendUser.id)
-                if ('http' not in friendHost):
-                    friendHost = 'https://' + friendHost
-                # TODO: fix hard coding    
-                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
-                    
-            except:        
-                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
                 
-            author = {"id": authorHost,
+            author = {"id": authorUser.id,
                       "bio": authorUser.bio,
                       "host": authorUser.host,
                       "firstName": authorUser.firstName,
                       "lastName": authorUser.lastName,
-                      "displayName": authorUser.displayName}
-            friend = {"id": friendHost,
+                      "displayName": authorUser.displayName,
+                      "github": authorUser.github}
+            friend = {"id": friendUser.id,
                       "bio": friendUser.bio,
                       "host": friendUser.host,
                       "firstName": friendUser.firstName,
                       "lastName": friendUser.lastName,
-                      "displayName": friendUser.displayName}
+                      "displayName": friendUser.displayName,
+                      "github": friendUser.github}
             output.append({"authorID": author, "friendID":friend})
             
         return output
@@ -219,37 +202,20 @@ class FriendsSerializer(serializers.HyperlinkedModelSerializer):
             authorUser = entry.author
             friendUser = entry.friend
             
-            try:
-                authorHost = authorUser.host + '/users/' + str(authorUser.id)
-                if ('http' not in authorHost):
-                    authorHost = 'https://' + authorHost  
-                # TODO: fix hard coding        
-                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
-            except:
-                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
-            
-            try:        
-                friendHost = friendUser.host + '/users/' + str(friendUser.id)
-                if ('http' not in friendHost):
-                    friendHost = 'https://' + friendHost
-                # TODO: fix hard coding    
-                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
-                    
-            except:        
-                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
-                
-            author = {"id": authorHost,
+            author = {"id": authorUser.id,
                       "bio": authorUser.bio,
                       "host": authorUser.host,
                       "firstName": authorUser.firstName,
                       "lastName": authorUser.lastName,
-                      "displayName": authorUser.displayName}
-            friend = {"id": friendHost,
+                      "displayName": authorUser.displayName,
+                      "github": authorUser.github}
+            friend = {"id": friendUser.id,
                       "bio": friendUser.bio,
                       "host": friendUser.host,
                       "firstName": friendUser.firstName,
                       "lastName": friendUser.lastName,
-                      "displayName": friendUser.displayName}
+                      "displayName": friendUser.displayName,
+                      "github": friendUser.github}
             output.append({"authorID": author, "friendID":friend})
             
         return output
@@ -307,18 +273,25 @@ class FollowersSerializer(serializers.HyperlinkedModelSerializer):
             friends = Friends.objects.filter(author=ID)         # list of friends
             
             following = []
-            
             for follow in follows:
-                host = follow.following.host
-                if ('http' not in host):
-                    host = 'https://' + host
-                following.append([host + '/author/' + str(follow.following.id), follow.following.displayName])
+                user = follow.following
+                following.append({"id": user.id, 
+                                  "bio": user.displayName,
+                                  "host": user.host,
+                                  "firstName": user.firstName,
+                                  "lastName": user.lastName,
+                                  "displayName": user.displayName,
+                                  "github": user.github})
             
             for friend in friends:
-                host = friend.friend.host
-                if ('http' not in host):
-                    host = 'https://' + host
-                following.append([host + '/author/' + str(friend.friend.id), friend.friend.displayName])
+                user = friend.friend
+                following.append({"id": user.id, 
+                                  "bio": user.displayName,
+                                  "host": user.host,
+                                  "firstName": user.firstName,
+                                  "lastName": user.lastName,
+                                  "displayName": user.displayName,
+                                  "github": user.github})
             
             return following     
         
@@ -335,37 +308,20 @@ class FollowersSerializer(serializers.HyperlinkedModelSerializer):
             authorUser = entry.author
             friendUser = entry.following
             
-            try:
-                authorHost = authorUser.host + '/users/' + str(authorUser.id)
-                if ('http' not in authorHost):
-                    authorHost = 'https://' + authorHost  
-                # TODO: fix hard coding        
-                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'    
-            except:
-                authorHost = 'https://cloud-align-server.herokuapp.com/users/' + str(authorUser.id) + '/'
-            
-            try:        
-                friendHost = friendUser.host + '/users/' + str(friendUser.id)
-                if ('http' not in friendHost):
-                    friendHost = 'https://' + friendHost
-                # TODO: fix hard coding    
-                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'   
-                    
-            except:        
-                friendHost = 'https://cloud-align-server.herokuapp.com/users/' + str(friendUser.id) +'/'
-                
-            author = {"id": authorHost,
+            author = {"id": authorUser.id,
                       "bio": authorUser.bio,
                       "host": authorUser.host,
                       "firstName": authorUser.firstName,
                       "lastName": authorUser.lastName,
-                      "displayName": authorUser.displayName}
-            friend = {"id": friendHost,
+                      "displayName": authorUser.displayName,
+                      "github": authorUser.github}
+            friend = {"id": friendUser.id,
                       "bio": friendUser.bio,
                       "host": friendUser.host,
                       "firstName": friendUser.firstName,
                       "lastName": friendUser.lastName,
-                      "displayName": friendUser.displayName}
+                      "displayName": friendUser.displayName,
+                      "github": authorUser.github}
             output.append({"authorID": author, "friendID":friend})
             
         return output
