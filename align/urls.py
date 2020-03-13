@@ -34,6 +34,8 @@ router.register(r'posts', posts_views.PostsViewSet,basename='Post-list')
 
 router.register(r'friendrequest', friends_views.FriendRequestViewSet)
 
+router.register(r'newfollowing', friends_views.FollowingViewSet, basename="newfollowing")  # new following
+
 router.register(r'author', friends_views.AuthorViewSet, basename="author")
 
 router.register(r'friend', friends_views.FriendViewSet, basename="friend")

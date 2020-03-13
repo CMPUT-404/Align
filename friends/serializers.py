@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from friends.models import FriendRequests
+from friends.models import FriendRequests, Following
 from friends.models import Followers
 from friends.models import Friends
 from rest_framework import serializers
@@ -330,9 +330,24 @@ class FollowersSerializer(serializers.HyperlinkedModelSerializer):
         model = Followers
         fields = ['author', 'following']        
         
-        
-        
-        
+
+# new following
+class FollowingSerializer(serializers.HyperlinkedModelSerializer):
+    def create(self, validated_data):
+        print(validated_data)
+        following = Following.objects.create(
+                sender=validated_data.get("sender"),
+                receiver=validated_data.get("receiver"),
+                status=None,
+        )
+
+        return following
+
+    class Meta:
+        model = Following
+        fields = ['sender', 'receiver', 'status']
+        read_only_fields = ('status',)
+
         
         
         

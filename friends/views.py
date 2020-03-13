@@ -1,19 +1,22 @@
+import copy
 from django.shortcuts import render
 import json
 from django.http import HttpResponse, Http404
 
 # Create your views here.
 from django.contrib.auth import get_user_model
-from friends.models import FriendRequests
+from friends.models import FriendRequests, Following
 from friends.models import Friends
 from friends.models import Followers
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from friends.serializers import FriendRequestSerializer
+from friends.serializers import FriendRequestSerializer, FollowingSerializer
 from friends.serializers import FriendsSerializer
 from friends.serializers import FollowersSerializer
 from rest_framework.authtoken.models import Token
+
+from users.serializers import UserSerializer
 
 User = get_user_model()
 
@@ -352,3 +355,20 @@ class FollowersViewSet(viewsets.ModelViewSet):
         # list of follower with user data
 
        return Response(FollowersViewSet.serializer_class.list())
+
+
+# new following
+class FollowingViewSet(viewsets.ModelViewSet):
+    queryset = Following.objects.all()
+    serializer_class = FollowingSerializer
+
+    def create(self, request, *args, **kwargs):
+        sender_serializer = UserSerializer(request.user, context={'request': request})
+
+        data = {"receiver": request.data["receiver"], "sender": sender_serializer.data['url']}
+        serializer = FollowingSerializer(data=data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=200)
+        else:
+            return Response(serializer.errors, status=400)
