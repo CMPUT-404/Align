@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -27,10 +29,15 @@ class Friends(models.Model):
 
 # new following
 class Following(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiver")
+    # Status: {
+    # True: both are friend, can be rejected (back to single-directionally without request notification)
+    # False: sender follows receiver single-directionally,
+    # None: A friend request has sent, can be rejected or accepted, sender follows receiver single-directionally,
+    # }
     status = models.BooleanField(null=True, default=None)
 
     class Meta:
-        unique_together = ["sender", "receiver"]  # this prevent duplicate #TODO prevenet following yourself
-
+        unique_together = ["sender", "receiver"]  # this prevent duplicate

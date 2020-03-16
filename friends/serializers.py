@@ -345,9 +345,5 @@ class FollowingSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Following
-        fields = ['sender', 'receiver', 'status']
-        read_only_fields = ('status',)
-
-        
-        
-        
+        fields = ['id','sender', 'receiver', 'status']
+        read_only_fields = ('status', 'id')
