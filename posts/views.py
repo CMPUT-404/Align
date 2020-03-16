@@ -84,9 +84,10 @@ def get_posts(request,author_id):
             pass
         token = Token.objects.get(key=code[6:])
         current_obj = User.objects.get(id = token.user_id)
-        author_obj = User.objects.get(id = author.id)
-        #print(author_obj.id)
-        queryset = Posts.objects.all().filter(author = author_obj).filter(visibilities = True).order_by("-publish")
+        author_obj = User.objects.get(id = author_id)
+        print(token.user_id)
+        print(author_id)
+        queryset = Posts.objects.all().filter(author = author_obj).filter(Q(visibilities = True)|Q(visible_to__icontains = token.user_id)|Q(author = current_obj)).order_by("-publish")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         #data = serializers.serialize('json', self.get_queryset())
         return Response(serializer_class.data)
