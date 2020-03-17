@@ -49,6 +49,12 @@ def post_comments(request,post_id):
             'request': Request(requests)
         }
         #print(request.data)
+        try:
+            a = request.data['auth']
+            b = request.data['comment']
+        except:
+            HttpResponse.status_code = 400
+            return HttpResponse("the body u provided is not correct")
         print("____________")
         print(request.data['auth'])
         print(type(request.data['auth']))
