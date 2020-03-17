@@ -433,14 +433,18 @@ class FollowingViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def accept_friend_request(request):
     receiver = request.user
-    request_id = request.data["id"]
+    sender_id = request.data["sender"]
+    #request_id = request.data["id"]
     try:
-        r = Following.objects.get(id=request_id)
+        r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
+        if (r == None):
+            raise RuntimeException()
         if (r.receiver != receiver):
             return Response("The request cannot be accepted, because the current user is not the receiver of the friend request",status=400)
         if r.status != None:
             return Response("The request cannot be accepted, because its status is {}".format(r.status), status=400)    
         r.status = True
+        r.save()
 
         # make other friend relation true
         reverseFollowing = Following.objects.filter(receiver=r.sender, sender=r.receiver).first()
@@ -448,7 +452,6 @@ def accept_friend_request(request):
             reverseFollowing.status = True
             reverseFollowing.save()
 
-        r.save()
         return Response("Friend request accepted", status=200)
     except:
         return Response("The request with id {} not found".format(request_id), status=400)
@@ -460,6 +463,7 @@ def accept_friend_request(request):
 def reject_friend_request(request):
     receiver = request.user
     sender_id = request.data["sender"]
+    #request_id = request.data["id"]
     try:
         r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
         if (r == None):
@@ -475,7 +479,7 @@ def reject_friend_request(request):
         return Response("The request with id {} not found".format(sender_id), status=400)
 
 
-@api_view(['DELETE'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def delete_friend(request):
     deleting = request.user
@@ -497,7 +501,7 @@ def delete_friend(request):
 
 
 
-@api_view(['DELETE'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def delete_following(request):
     deleting = request.user
