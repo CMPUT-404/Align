@@ -459,17 +459,20 @@ def accept_friend_request(request):
 @permission_classes([IsAuthenticated])
 def reject_friend_request(request):
     receiver = request.user
-    request_id = request.data["id"]
+    sender_id = request.data["sender"]
     try:
-        r = Following.objects.get(id=request_id)
+        r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
+        if (r == None):
+            raise RuntimeException()
         if (r.receiver != receiver):
             return Response("The request cannot be accepted, because the current user is not the receiver of the friend request",status=400)
         if r.status == False:
             return Response("The request cannot be rejected, because its status is {}".format(r.status), status=400)
+        r.status = False    
         r.save()
         return Response("Friend request rejected", status=200)
     except:
-        return Response("The request with id % not found".format(request_id), status=400)
+        return Response("The request with id {} not found".format(sender_id), status=400)
 
 
 @api_view(['DELETE'])
@@ -486,7 +489,7 @@ def delete_friend(request):
         if (friendRelation2 != None):
             friendRelation2.status = False
             friendRelation2.save()
-        if ((friendRelation1 == None) && (friendRelation2 == None)):
+        if ((friendRelation1 == None) and (friendRelation2 == None)):
             return Response("The current user {} is not friends with {}".format(request.user.displayName, to_delete.displayName), status=400)
         return Response("Friend deleted", status=200)
     except:
@@ -507,7 +510,7 @@ def delete_following(request):
             followingRelation1.delete()
         if (followingRelation2 != None):
             followingRelation2.delete()
-        if ((followingRelation1 == None) && (followingRelation2 == None)):
+        if ((followingRelation1 == None) and (followingRelation2 == None)):
             return Response("The current user {} is not following {}".format(request.user.displayName, to_delete.displayName), status=400)
         return Response("Following deleted", status=200)
     except:
