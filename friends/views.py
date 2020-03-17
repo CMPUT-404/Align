@@ -432,13 +432,24 @@ class FollowingViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def accept_friend_request(request):
+    receiver = request.user
     request_id = request.data["id"]
     try:
         r = Following.objects.get(id=request_id)
+        if (r.receiver != receiver):
+            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request",status=400)
         if r.status != None:
-            return Response("The request cannot be accepted, because its status is {}".format(r.status), status=400)
+            return Response("The request cannot be accepted, because its status is {}".format(r.status), status=400)    
         r.status = True
+
+        # make other friend relation true
+        reverseFollowing = Following.objects.filter(receiver=r.sender, sender=r.receiver).first()
+        if (reverseFollowing != None):
+            reverseFollowing.status = True
+            reverseFollowing.save()
+
         r.save()
+        return Response("Friend request accepted", status=200)
     except:
         return Response("The request with id {} not found".format(request_id), status=400)
 
@@ -447,15 +458,60 @@ def accept_friend_request(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reject_friend_request(request):
+    receiver = request.user
     request_id = request.data["id"]
     try:
         r = Following.objects.get(id=request_id)
+        if (r.receiver != receiver):
+            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request",status=400)
         if r.status == False:
             return Response("The request cannot be rejected, because its status is {}".format(r.status), status=400)
         r.save()
+        return Response("Friend request rejected", status=200)
     except:
         return Response("The request with id % not found".format(request_id), status=400)
 
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_friend(request):
+    deleting = request.user
+    to_delete = request.data["friend"]
+    try:
+        to_delete = User.objects.get(id=to_delete)
+        friendRelation1 = Following.objects.filter(sender=deleting, receiver=to_delete, status=True).first()         # this relation needs to be deleted
+        friendRelation2 = Following.objects.filter(sender=to_delete, receiver=deleting, status=True).first()         # this one needs to be modified
+        if (friendRelation1 != None):
+            friendRelation1.delete()
+        if (friendRelation2 != None):
+            friendRelation2.status = False
+            friendRelation2.save()
+        if ((friendRelation1 == None) && (friendRelation2 == None)):
+            return Response("The current user {} is not friends with {}".format(request.user.displayName, to_delete.displayName), status=400)
+        return Response("Friend deleted", status=200)
+    except:
+        return Response("The request with id % not found".format(request.data["following"]), status=400)
+
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_following(request):
+    deleting = request.user
+    to_delete = request.data["following"]
+    try:
+        to_delete = User.objects.get(id=to_delete)
+        followingRelation1 = Following.objects.filter(sender=deleting, receiver=to_delete, status=False).first()         # delete rejected request if present
+        followingRelation2 = Following.objects.filter(sender=deleting, receiver=to_delete, status=None).first()          # delete unreplied request if present
+        if (followingRelation1 != None):
+            followingRelation1.delete()
+        if (followingRelation2 != None):
+            followingRelation2.delete()
+        if ((followingRelation1 == None) && (followingRelation2 == None)):
+            return Response("The current user {} is not following {}".format(request.user.displayName, to_delete.displayName), status=400)
+        return Response("Following deleted", status=200)
+    except:
+        return Response("The request with id % not found".format(request.data["following"]), status=400)
 
 def get_user_by_url(url):
     user_id = url.split("/")[-2]

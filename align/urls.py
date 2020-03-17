@@ -54,4 +54,6 @@ urlpatterns = [
     url(r'^users/validate$', user_views.ValidateView.as_view()),
     url(r'^newfollowing/accept', friends_views.accept_friend_request),
     url(r'^newfollowing/reject', friends_views.reject_friend_request),
+    url(r'^newfollowing/friend/', friends_views.delete_friend),
+    url(r'^newfollowing/following/', friends_views.delete_following),
 ]
