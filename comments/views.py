@@ -39,7 +39,8 @@ def post_comments(request,post_id):
         }
         #id = request.data.get('post_id')
         #print(id)
-        queryset = Comments.objects.all().filter(root = post_id).order_by("-publish")
+        post = Posts.objects.get(id = post_id)
+        queryset = Comments.objects.all().filter(root = post).order_by("-publish")
         serializer_class = CommentsSerializer(instance=queryset, context= serializer_context, many=True)
         #data = serializers.serialize('json', self.get_queryset())
         return Response(serializer_class.data)
