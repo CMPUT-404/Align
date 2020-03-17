@@ -49,12 +49,13 @@ def post_comments(request,post_id):
             'request': Request(requests)
         }
         #print(request.data)
-        #print("____________")
-        #print(request.data)
-        #print("____________")
+        print("____________")
+        print(request.data['auth'])
+        print(type(request.data['auth']))
+        print("____________")
         #print(post_id)
         try:
-            CommentsCreateSerializer.create(request.data,post_id)
+            CommentsCreateSerializer.create(request.data['auth'],request.data['comment'],post_id)
             return HttpResponse("the comment has been successfully added")
         except:
             HttpResponse.status_code = 406

@@ -12,7 +12,7 @@ class CommentsSerializer(serializers.Serializer):
     comment = serializers.SerializerMethodField()
     author_data = serializers.SerializerMethodField()
     contentType = serializers.SerializerMethodField()
-
+    publish = serializers.SerializerMethodField()
 
     class Meta:
         model = Comments
@@ -26,6 +26,8 @@ class CommentsSerializer(serializers.Serializer):
         return (obj.root.id)
     def get_comment(self,obj):
         return (obj.comment)
+    def get_publish(self,obj):
+        return (obj.publish)
 
     def get_author_data(self,obj):
         user = User.objects.get(id = obj.auth)
@@ -37,9 +39,9 @@ class CommentsSerializer(serializers.Serializer):
     def get_contentType(self,obj):
         return ("text/plain")
 
-class CommentsCreateSerializer(serializers.HyperlinkedModelSerializer):
+class CommentsCreateSerializer(serializers.Serializer):
     @classmethod
-    def create(self, validated_data,post_id):
+    def create(self, a,b,post_id):
         #p_id = validated_data.get("root",Comments.root)
         post = Posts.objects.get(id = post_id)
         #user_id = validated_data.get("user_id",Comments.author)
@@ -48,10 +50,11 @@ class CommentsCreateSerializer(serializers.HyperlinkedModelSerializer):
             #id=validated_data.get('id', Posts.title),
             #author=validated_data.get('author', Posts.author),
             #auth = validated_data.get("auth",Comments.auth),
-            auth = "f9d62b2d-da10-4f7f-9124-9233d49d1701",
+            #auth = "f9d62b2d-da10-4f7f-9124-9233d49d1701",
+            auth = a,
             root = post,
             #comment = validated_data.get('comment', Comments.comment),
-            comment = "good day",
+            comment = b,
             #publish = validated_data.get('publish', Comments.publish),
             publish = str(datetime.datetime.now()),
             )
