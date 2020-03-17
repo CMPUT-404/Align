@@ -45,14 +45,14 @@ def post_comments(request,post_id):
         #data = serializers.serialize('json', self.get_queryset())
         return Response(serializer_class.data)
     if request.method == 'POST':
-        #serializer_context = {
-        #    'request': Request(requests)
-        #}
+        serializer_context = {
+            'request': Request(requests)
+        }
         #print(request.data)
         #print("____________")
         #print(request.data)
         #print("____________")
-        print(post_id)
+        #print(post_id)
         try:
             CommentsCreateSerializer.create(request.data,post_id)
             return HttpResponse("the comment has been successfully added")
