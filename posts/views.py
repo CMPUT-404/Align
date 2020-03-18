@@ -35,8 +35,16 @@ class PostsViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         user = request.user
+        print(user)
+        try:
+            code = request.META['HTTP_AUTHORIZATION']
+            #print(code[6:])
+        except:
+            pass
+        token = Token.objects.get(key=code[6:])
+        current_obj = User.objects.get(id = token.user_id)
         if user.id:
-            queryset = Posts.objects.all().filter().order_by("-publish")
+            queryset = Posts.objects.filter(Q(author = current_obj)|Q(visibilities = True)|Q(visible_to__icontains = token.user_id)).order_by("-publish")
             serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
             return Response(serializer_class.data)
         else:
