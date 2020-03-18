@@ -14,7 +14,7 @@ class User(AbstractUser):
     firstName = models.CharField(max_length=20, null=True, blank=True)
     lastName = models.CharField(max_length=20, null=True, blank=True)
     displayName = models.CharField(max_length=40, null=True, blank=True)
-    github = models.URLField(blank=True, null=True,)
+    github = models.CharField(max_length=40, blank=True, null=True,)
 
     def save(self, *args, **kwargs):
         self.generate_display_name()
