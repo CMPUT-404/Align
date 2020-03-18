@@ -437,10 +437,10 @@ def accept_friend_request(request):
     #request_id = request.data["id"]
     try:
         r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
-        if (r == None):
-            raise RuntimeException()
-        if (r.receiver != receiver):
-            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request",status=400)
+        if r == None:
+            raise RuntimeError()
+        if r.receiver != receiver:
+            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request", status=400)
         if r.status != None:
             return Response("The request cannot be accepted, because its status is {}".format(r.status), status=400)    
         r.status = True
@@ -448,13 +448,13 @@ def accept_friend_request(request):
 
         # make other friend relation true
         reverseFollowing = Following.objects.filter(receiver=r.sender, sender=r.receiver).first()
-        if (reverseFollowing != None):
+        if reverseFollowing != None:
             reverseFollowing.status = True
             reverseFollowing.save()
 
         return Response("Friend request accepted", status=200)
     except:
-        return Response("The request with id {} not found".format(request_id), status=400)
+        return Response("The request with id {} not found".format(sender_id), status=400)
 
 
 # TODO NEED TO ACCORDING TO USER AND STATUS
@@ -466,10 +466,10 @@ def reject_friend_request(request):
     #request_id = request.data["id"]
     try:
         r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
-        if (r == None):
-            raise RuntimeException()
-        if (r.receiver != receiver):
-            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request",status=400)
+        if r == None:
+            raise RuntimeError()
+        if r.receiver != receiver:
+            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request", status=400)
         if r.status == False:
             return Response("The request cannot be rejected, because its status is {}".format(r.status), status=400)
         r.status = False    
@@ -490,12 +490,12 @@ def delete_friend(request):
         to_delete = User.objects.get(id=to_delete)
         friendRelation1 = Following.objects.filter(sender=deleting, receiver=to_delete, status=True).first()         # this relation needs to be deleted
         friendRelation2 = Following.objects.filter(sender=to_delete, receiver=deleting, status=True).first()         # this one needs to be modified
-        if (friendRelation1 != None):
+        if friendRelation1 != None:
             friendRelation1.delete()
-        if (friendRelation2 != None):
+        if friendRelation2 != None:
             friendRelation2.status = False
             friendRelation2.save()
-        if ((friendRelation1 == None) and (friendRelation2 == None)):
+        if friendRelation1 == None and friendRelation2 == None:
             return Response("The current user {} is not friends with {}".format(request.user.displayName, to_delete.displayName), status=400)
         return Response("Friend deleted", status=200)
     except:
@@ -512,11 +512,11 @@ def delete_following(request):
         to_delete = User.objects.get(id=to_delete)
         followingRelation1 = Following.objects.filter(sender=deleting, receiver=to_delete, status=False).first()         # delete rejected request if present
         followingRelation2 = Following.objects.filter(sender=deleting, receiver=to_delete, status=None).first()          # delete unreplied request if present
-        if (followingRelation1 != None):
+        if followingRelation1 != None:
             followingRelation1.delete()
-        if (followingRelation2 != None):
+        if followingRelation2 != None:
             followingRelation2.delete()
-        if ((followingRelation1 == None) and (followingRelation2 == None)):
+        if followingRelation1 == None and followingRelation2 == None:
             return Response("The current user {} is not following {}".format(request.user.displayName, to_delete.displayName), status=400)
         return Response("Following deleted", status=200)
     except:
@@ -548,7 +548,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
     @action(methods=['post', 'get'], detail=True, url_path='friends', url_name='friendInList')
     def friendInList(self, request, pk=None):
 
-        if (request.method == 'GET'):
+        if request.method == 'GET':
             # get friend list of author
             # URL: /author/{author_id}/friends
             responseDictionary = {"query": "friends", "authors": []}
@@ -577,7 +577,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
 
 
-        elif (request.method == 'POST'):
+        elif request.method == 'POST':
             # ask if anyone in the list is a friend
             # URL: ​/author​/{author_id}​/friends
             responseDictionary = {"query": "friends", "author": pk, "authors": []}
@@ -590,7 +590,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
                     friendUser = get_user_by_url(friend)
                     query1 = Following.objects.filter(receiver=pkUser, sender=friendUser, status=True).first()
                     query2 = Following.objects.filter(receiver=friendUser, sender=pkUser, status=True).first()
-                    if ((query1 != None) or (query2 != None)):
+                    if query1 != None or query2 != None:
                         friendList.append(friend)
 
                 responseDictionary["authors"] = friendList
@@ -618,11 +618,11 @@ class AuthorViewSet(viewsets.ModelViewSet):
             responseDictionary["authors"] = [friends1.data, friends2.data]
             query1 = Following.objects.filter(receiver=pkUser, sender=skUser, status=True).first()
             query2 = Following.objects.filter(receiver=skUser, sender=pkUser, status=True).first()
-            responseDictionary["friends"] = ((query1 != None) or (query2 != None))
+            responseDictionary["friends"] = query1 != None or query2 != None
             response = Response(responseDictionary)
         except:
             raise
-            responseDictionary["friends"] = False
+            responseDictionary["friends"] = False  # WARNING code unreachable
             response = Response(responseDictionary)
 
         return response
