@@ -31,31 +31,18 @@ class CommentsSerializer(serializers.Serializer):
 
     def get_author_data(self,obj):
         user = User.objects.get(id = obj.auth)
-        #post = obj.root.author
         return {"id": user.id, "username": user.username, "email": user.email, "bio": user.bio, "host": user.host, "firstName": user.firstName,"lastName": user.lastName, "displayName": user.displayName,"github":user.github}
-        #print(real_id)
-        #return User.objects.get(id = real_id)
-
     def get_contentType(self,obj):
         return ("text/plain")
 
 class CommentsCreateSerializer(serializers.Serializer):
     @classmethod
     def create(self, a,b,post_id):
-        #p_id = validated_data.get("root",Comments.root)
         post = Posts.objects.get(id = post_id)
-        #user_id = validated_data.get("user_id",Comments.author)
-        #author_obj = User.objects.get(id = user_id)
         comment = Comments(
-            #id=validated_data.get('id', Posts.title),
-            #author=validated_data.get('author', Posts.author),
-            #auth = validated_data.get("auth",Comments.auth),
-            #auth = "f9d62b2d-da10-4f7f-9124-9233d49d1701",
             auth = a,
             root = post,
-            #comment = validated_data.get('comment', Comments.comment),
             comment = b,
-            #publish = validated_data.get('publish', Comments.publish),
             publish = str(datetime.datetime.now()),
             )
         comment.save()
@@ -63,17 +50,11 @@ class CommentsCreateSerializer(serializers.Serializer):
 
     @classmethod
     def delete(self, validated_data):
-        # delete friend request
-
         try:
             comment = Comments.objects.get(id = validated_data)
-            #request = FriendRequests.objects.get(authorID=friend, friendID=author)
             comment.delete()
         except:
             return false
-            #if (supress):
-                #return
-            #raise RuntimeError("Unable to delete friend request")
     class Meta:
         model = Comments
         fields = ['auth','root','comment','publish']

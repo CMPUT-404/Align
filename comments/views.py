@@ -1,6 +1,4 @@
 from django.shortcuts import render
-
-# Create your views here.
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from comments.models import Comments
@@ -8,7 +6,6 @@ from comments.serializers import CommentsSerializer,CommentsCreateSerializer
 from rest_framework.views import APIView
 from django.shortcuts import render
 from rest_framework.decorators import api_view
-# Create your views here.
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from posts.models import Posts
@@ -28,6 +25,7 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 from django.db.models import Q
+User = get_user_model()
 
 @api_view(['GET', 'POST'])
 def post_comments(request,post_id):
@@ -37,45 +35,48 @@ def post_comments(request,post_id):
         serializer_context = {
             'request': Request(requests),
         }
-        #id = request.data.get('post_id')
-        #print(id)
+        try:
+            post = Posts.objects.get(id = post_id)
+        except:
+            HttpResponse.status_code = 400
+            return HttpResponse("the post_id u provided is invalid or there is no such posts with this id")
         post = Posts.objects.get(id = post_id)
         queryset = Comments.objects.all().filter(root = post).order_by("-publish")
         serializer_class = CommentsSerializer(instance=queryset, context= serializer_context, many=True)
-        #data = serializers.serialize('json', self.get_queryset())
         return Response(serializer_class.data)
-    if request.method == 'POST':
+    elif request.method == 'POST':
         serializer_context = {
             'request': Request(requests)
         }
-        #print(request.data)
         try:
             a = request.data['auth']
+        except:
+            HttpResponse.status_code = 400
+            return HttpResponse("the body u provided does not contain a 'auth' tag or the data with 'auth' is empty")
+        try:
             b = request.data['comment']
         except:
             HttpResponse.status_code = 400
-            return HttpResponse("the body u provided is not correct")
-        print("____________")
-        print(request.data['auth'])
-        print(type(request.data['auth']))
-        print("____________")
-        #print(post_id)
+            return HttpResponse("the body u provided does not contain a 'comment' tag or the data with 'comment' is empty")
+        try:
+            post = Posts.objects.get(id = post_id)
+        except:
+            HttpResponse.status_code = 400
+            return HttpResponse("the post_id u provided is invalid or there is no such posts with this id")
+        try:
+            author_obj = User.objects.get(id = request.data['auth'])
+        except:
+            HttpResponse.status_code = 400
+            return HttpResponse("the auth u provided is invalid or there is no such user with this id")
         try:
             CommentsCreateSerializer.create(request.data['auth'],request.data['comment'],post_id)
             return HttpResponse("the comment has been successfully added")
         except:
             HttpResponse.status_code = 406
             return HttpResponse("the comment has not been added")
-            '''
-        serializer = CommentsCreateSerializer(data = request.data)
-        serializer.is_valid()
-        print
-        if serializer.is_valid():
-            serializer.save()
-            return HttpResponse("the post has been successfully added")
-        else:
-            return HttpResponse("the post has not been added")
-            '''
+    else:
+        HttpResponse.status_code = 400
+        return HttpResponse("this specific http is not allowed for this api")
 
 @api_view(['DELETE'])
 # delete
@@ -86,12 +87,14 @@ def delete_comment(request,comment_id):
         serializer_context = {
             'request': Request(requests),
         }
-        #id = request.data.get('post_id')
-        print(comment_id)
+       
         try:
             CommentsCreateSerializer.delete(comment_id)
             return HttpResponse("the comment has been successfully deleted")
         except:
             # 406
-            HttpResponse.status_code = 406
-            return HttpResponse("the comment has not been deleted")
+            HttpResponse.status_code = 400
+            return HttpResponse("the comment has not been deleted or there is no such comment")
+    else:
+        HttpResponse.status_code = 400
+        return HttpResponse("this specific http is not allowed for this api")
