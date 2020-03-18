@@ -222,70 +222,70 @@ class FriendViewSet(viewsets.ModelViewSet):
         return Response(FriendViewSet.serializer_class.list())
 
 
-class AuthorViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that asks a service if anyone in the list is a friend.
-    """
-
-    queryset = Friends.objects.all()
-    serializer_class = FriendsSerializer
-
-    @action(methods=['post', 'get'], detail=True, url_path='friends', url_name='friendInList')
-    def friendInList(self, request, pk=None):
-
-        if (request.method == 'GET'):
-            # get friend list of author
-            # URL: /author/{author_id}/friends
-            responseDictionary = {"query": "friends", "authors": []}
-            try:
-                responseDictionary["authors"] = FriendsSerializer.friendsList(pk)
-                response = Response(responseDictionary)
-            except:
-                response = Response(responseDictionary)
-            return response
-
-        elif (request.method == 'POST'):
-            # ask if anyone in the list is a friend
-            # URL: ​/author​/{author_id}​/friends
-            responseDictionary = {"query": "friends", "author": str(pk), "authors": []}
-            try:
-                # swagger
-                body = request.body
-                requestJson = json.loads(body)
-                pk = requestJson["author"]
-                listOfFriends = requestJson["authors"]
-                responseDictionary["authors"] = FriendsSerializer.areFriendsMany(pk, listOfFriends)
-                response = Response(responseDictionary)
-            except:
-                response = Response(responseDictionary)
-            return response
-
-        else:
-            responseDictionary = {"Error": "Page does not exist"}
-            return Response(responseDictionary)
-
-    @action(methods=['get'], detail=True, url_path='friends/(?P<sk>[^/.]+)', url_name='areFriends')
-    def areFriends(self, request, pk=None, sk=None):
-        # ask if 2 authors are friends
-        # URL: /author/{author1_id}/friends/{author2_id}
-
-        responseDictionary = {"query": "friends", "friends": False, "authors": [str(pk), str(sk)]}
-        try:
-            pkUser = User.objects.get(id=pk)
-            skUser = User.objects.get(id=sk)
-            pkhost = pkUser.host + '/author/' + str(pk)
-            skhost = skUser.host + '/author/' + str(sk)
-            if ('http' not in pkhost):
-                pkhost = 'https://' + pkhost
-            if ('http' not in skhost):
-                skhost = 'https://' + skhost
-            responseDictionary["authors"] = [pkhost, skhost]
-            response = Response(responseDictionary)
-            responseDictionary["friends"] = FriendsSerializer.areFriendsSingle(pk, sk)
-        except:
-            response = Response(responseDictionary)
-
-        return response
+#class AuthorViewSet(viewsets.ModelViewSet):
+#    """
+#    API endpoint that asks a service if anyone in the list is a friend.
+#    """
+#
+#    queryset = Friends.objects.all()
+#    serializer_class = FriendsSerializer
+#
+#    @action(methods=['post', 'get'], detail=True, url_path='friends', url_name='friendInList')
+#    def friendInList(self, request, pk=None):
+#
+#        if (request.method == 'GET'):
+#            # get friend list of author
+#            # URL: /author/{author_id}/friends
+#            responseDictionary = {"query": "friends", "authors": []}
+#            try:
+#                responseDictionary["authors"] = FriendsSerializer.friendsList(pk)
+#                response = Response(responseDictionary)
+#            except:
+#                response = Response(responseDictionary)
+#            return response
+#
+#        elif (request.method == 'POST'):
+#            # ask if anyone in the list is a friend
+#            # URL: ​/author​/{author_id}​/friends
+#            responseDictionary = {"query": "friends", "author": str(pk), "authors": []}
+#            try:
+#                # swagger
+#                body = request.body
+#                requestJson = json.loads(body)
+#                pk = requestJson["author"]
+#                listOfFriends = requestJson["authors"]
+#                responseDictionary["authors"] = FriendsSerializer.areFriendsMany(pk, listOfFriends)
+#                response = Response(responseDictionary)
+#            except:
+#                response = Response(responseDictionary)
+#            return response
+#
+#        else:
+#            responseDictionary = {"Error": "Page does not exist"}
+#            return Response(responseDictionary)
+#
+#    @action(methods=['get'], detail=True, url_path='friends/(?P<sk>[^/.]+)', url_name='areFriends')
+#    def areFriends(self, request, pk=None, sk=None):
+#        # ask if 2 authors are friends
+#        # URL: /author/{author1_id}/friends/{author2_id}
+#
+#        responseDictionary = {"query": "friends", "friends": False, "authors": [str(pk), str(sk)]}
+#        try:
+#            pkUser = User.objects.get(id=pk)
+#            skUser = User.objects.get(id=sk)
+#            pkhost = pkUser.host + '/author/' + str(pk)
+#            skhost = skUser.host + '/author/' + str(sk)
+#            if ('http' not in pkhost):
+#                pkhost = 'https://' + pkhost
+#            if ('http' not in skhost):
+#                skhost = 'https://' + skhost
+#            responseDictionary["authors"] = [pkhost, skhost]
+#            response = Response(responseDictionary)
+#            responseDictionary["friends"] = FriendsSerializer.areFriendsSingle(pk, sk)
+#        except:
+#            response = Response(responseDictionary)
+#
+#        return response
 
 
 class FollowersViewSet(viewsets.ModelViewSet):
@@ -413,7 +413,7 @@ class FollowingViewSet(viewsets.ModelViewSet):
         for r in requests_from_you.data:
             # get users json object
             r['sender'] = you.data
-            r['receiver'] = UserSerializer(get_user_by_url(r['sender']), context={'request': request}).data
+            r['receiver'] = UserSerializer(get_user_by_url(r['receiver']), context={'request': request}).data
 
         return Response([*requests_to_you.data, *requests_from_you.data])
 
@@ -479,6 +479,8 @@ def reject_friend_request(request):
         return Response("The request with id {} not found".format(sender_id), status=400)
 
 
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def delete_friend(request):
@@ -521,5 +523,107 @@ def delete_following(request):
         return Response("The request with id % not found".format(request.data["following"]), status=400)
 
 def get_user_by_url(url):
-    user_id = url.split("/")[-2]
+    try:
+        user_id = str(url).split("/")[-2]
+    except:
+        user_id = str(url).split("/")[-1]
     return User.objects.get(id=user_id)
+
+
+
+
+
+class AuthorViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for friend questions
+    """
+
+    queryset = Following.objects.all()
+    serializer_class = FollowingSerializer
+    # all apis in following need perms
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+
+    @action(methods=['post', 'get'], detail=True, url_path='friends', url_name='friendInList')
+    def friendInList(self, request, pk=None):
+
+        if (request.method == 'GET'):
+            # get friend list of author
+            # URL: /author/{author_id}/friends
+            responseDictionary = {"query": "friends", "authors": []}
+
+            try:
+                user = User.objects.get(id=pk)
+                query1 = Following.objects.filter(receiver=user, status=True)
+                query2 = Following.objects.filter(sender=user, status=True)
+                friends1 = FollowingSerializer(instance=query1, many=True, context={'request': request})
+                friends2 = FollowingSerializer(instance=query2, many=True, context={'request': request})
+
+                friendList = []
+
+                # add to friend list
+                for friend in friends1.data:
+                    friendList.append(UserSerializer(get_user_by_url(friend['sender']), context={'request': request}).data)
+
+                for friend in friends2.data:
+                    friendList.append(UserSerializer(get_user_by_url(friend['receiver']), context={'request': request}).data) 
+
+                responseDictionary["authors"] = friendList
+                response = Response(responseDictionary)
+            except:
+                response = Response(responseDictionary)
+            return response
+
+
+
+        elif (request.method == 'POST'):
+            # ask if anyone in the list is a friend
+            # URL: ​/author​/{author_id}​/friends
+            responseDictionary = {"query": "friends", "author": pk, "authors": []}
+            try:
+                toCheck = request.data["authors"]
+                pkUser = User.objects.get(id=pk)
+                friendList = []
+                # check if friend is a pkUser's friend
+                for friend in toCheck:
+                    friendUser = get_user_by_url(friend)
+                    query1 = Following.objects.filter(receiver=pkUser, sender=friendUser, status=True).first()
+                    query2 = Following.objects.filter(receiver=friendUser, sender=pkUser, status=True).first()
+                    if ((query1 != None) or (query2 != None)):
+                        friendList.append(friend)
+
+                responseDictionary["authors"] = friendList
+                response = Response(responseDictionary)
+            except:
+                response = Response(responseDictionary)
+            return response
+
+        else:
+            responseDictionary = {"Error": "Page does not exist"}
+            return Response(responseDictionary)
+
+    @action(methods=['get'], detail=True, url_path='friends/(?P<sk>[^/.]+)', url_name='areFriends')
+    def areFriends(self, request, pk=None, sk=None):
+        # ask if 2 authors are friends
+        # URL: /author/{author1_id}/friends/{author2_id}
+
+        responseDictionary = {"query": "friends", "friends": True, "authors": []}
+        try:
+            # check if they are friends
+            pkUser = User.objects.get(id=pk)
+            skUser = User.objects.get(id=sk)
+            friends1 = UserSerializer(instance=pkUser, context={'request': request})
+            friends2 = UserSerializer(instance=skUser, context={'request': request})
+            responseDictionary["authors"] = [friends1.data, friends2.data]
+            query1 = Following.objects.filter(receiver=pkUser, sender=skUser, status=True).first()
+            query2 = Following.objects.filter(receiver=skUser, sender=pkUser, status=True).first()
+            responseDictionary["friends"] = ((query1 != None) or (query2 != None))
+            response = Response(responseDictionary)
+        except:
+            raise
+            responseDictionary["friends"] = False
+            response = Response(responseDictionary)
+
+        return response
+
