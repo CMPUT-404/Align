@@ -32,26 +32,13 @@ class PostsViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)  
     queryset = Posts.objects.all().filter().order_by("-publish")
     serializer_class = PostsSerializer
-
     def list(self, request, *args, **kwargs):
+
         user = request.user
-        print(user)
-        try:
-            code = request.META['HTTP_AUTHORIZATION']
-            #print(code[6:])
-        except:
-            pass
-        token = Token.objects.get(key=code[6:])
-        current_obj = User.objects.get(id = token.user_id)
         if user.id:
-            queryset = Posts.objects.filter(Q(author = current_obj)|Q(visibilities = True)|Q(visible_to__icontains = token.user_id)).order_by("-publish")
+            queryset = Posts.objects.filter(Q(author = user)|Q(visibilities = True)|Q(visible_to__icontains = user.id)).order_by("-publish")
             serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
             return Response(serializer_class.data)
-        else:
-            queryset = Posts.objects.all().filter(visibilities = True).order_by("-publish")
-            serializer_class = PostsSerializer(instance = queryset, context={'request': request}, many=True)
-            return Response(serializer_class.data)
-            
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_posts_author(request,author_id):
