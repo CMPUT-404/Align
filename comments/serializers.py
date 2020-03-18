@@ -12,7 +12,7 @@ class CommentsSerializer(serializers.Serializer):
     comment = serializers.SerializerMethodField()
     author_data = serializers.SerializerMethodField()
     contentType = serializers.SerializerMethodField()
-
+    publish = serializers.SerializerMethodField()
 
     class Meta:
         model = Comments
@@ -26,31 +26,23 @@ class CommentsSerializer(serializers.Serializer):
         return (obj.root.id)
     def get_comment(self,obj):
         return (obj.comment)
+    def get_publish(self,obj):
+        return (obj.publish)
 
     def get_author_data(self,obj):
         user = User.objects.get(id = obj.auth)
-        #post = obj.root.author
         return {"id": user.id, "username": user.username, "email": user.email, "bio": user.bio, "host": user.host, "firstName": user.firstName,"lastName": user.lastName, "displayName": user.displayName,"github":user.github}
-        #print(real_id)
-        #return User.objects.get(id = real_id)
-
     def get_contentType(self,obj):
         return ("text/plain")
 
-class CommentsCreateSerializer(serializers.HyperlinkedModelSerializer):
+class CommentsCreateSerializer(serializers.Serializer):
     @classmethod
-    def create(self, validated_data,post_id):
-        #p_id = validated_data.get("root",Comments.root)
+    def create(self, a,b,post_id):
         post = Posts.objects.get(id = post_id)
-        #user_id = validated_data.get("user_id",Comments.author)
-        #author_obj = User.objects.get(id = user_id)
         comment = Comments(
-            #id=validated_data.get('id', Posts.title),
-            #author=validated_data.get('author', Posts.author),
-            auth = validated_data.get("auth",Comments.auth),
+            auth = a,
             root = post,
-            comment = validated_data.get('comment', Comments.comment),
-            #publish = validated_data.get('publish', Comments.publish),
+            comment = b,
             publish = str(datetime.datetime.now()),
             )
         comment.save()
@@ -58,17 +50,11 @@ class CommentsCreateSerializer(serializers.HyperlinkedModelSerializer):
 
     @classmethod
     def delete(self, validated_data):
-        # delete friend request
-
         try:
             comment = Comments.objects.get(id = validated_data)
-            #request = FriendRequests.objects.get(authorID=friend, friendID=author)
             comment.delete()
         except:
             return false
-            #if (supress):
-                #return
-            #raise RuntimeError("Unable to delete friend request")
     class Meta:
         model = Comments
         fields = ['auth','root','comment','publish']
