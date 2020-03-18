@@ -34,6 +34,8 @@ router.register(r'posts', posts_views.PostsViewSet,basename='Post-list')
 
 router.register(r'friendrequest', friends_views.FriendRequestViewSet)
 
+router.register(r'newfollowing', friends_views.FollowingViewSet, basename="newfollowing")  # new following
+
 router.register(r'author', friends_views.AuthorViewSet, basename="author")
 
 router.register(r'friend', friends_views.FriendViewSet, basename="friend")
@@ -50,4 +52,8 @@ urlpatterns = [
     url(r'^users/login$', user_views.LoginView.as_view()),
     url(r'^users/register$', user_views.RegisterView.as_view()),
     url(r'^users/validate$', user_views.ValidateView.as_view()),
+    url(r'^newfollowing/accept', friends_views.accept_friend_request),
+    url(r'^newfollowing/reject', friends_views.reject_friend_request),
+    url(r'^deletefriend', friends_views.delete_friend),                                 # TODO: fix url if possible
+    url(r'^deletefollowing', friends_views.delete_following),
 ]
