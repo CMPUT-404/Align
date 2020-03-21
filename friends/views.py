@@ -417,34 +417,33 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
 
 
-    @action(methods=['post', 'get'], detail=True, url_path='followers', url_name='followerList')
+    @action(methods=['get'], detail=True, url_path='followers', url_name='followerList')
     def follower_List(self, request, pk=None):
 
-        if request.method == 'GET':
-            # get follower list of author
-            # URL: /author/{author_id}/followers
-            response = {"query": "friends", "authors": []}
-
-            try:
-                # get user object
-                user = User.objects.get(id=pk)
-            except:
-                response["error"] = "Author is not from this server"
-                return Response(response, status=400)
+        # get follower list of author
+        # URL: /author/{author_id}/followers
+        response = {"query": "followers", "authors": []}
+        
+        try:
+            # get user object
+            user = User.objects.get(id=pk)
+        except:
+            response["error"] = "Author is not from this server"
+            return Response(response, status=400)
                 
-            # get friends from following model
-            userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-            query = Following.objects.filter(sender=userUrl)
+        # get friends from following model
+        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
+        query = Following.objects.filter(sender=userUrl)
+        
+        followerList = []
 
-            followerList = []
+        # add to friend list
+        for follower in query:
+            if (follower.status != True):
+                followerList.append(follower.receiver)
 
-            # add to friend list
-            for follower in query:
-                if (follower.status != True):
-                    followerList.append(follower.receiver)
-
-            response["authors"] = followerList
-            return Response(response, status=200)
+        response["authors"] = followerList
+        return Response(response, status=200)
 
 
 
@@ -505,7 +504,33 @@ class AuthorViewSet(viewsets.ModelViewSet):
                 
 
 
+    @action(methods=['get'], detail=True, url_path='friendrequests', url_name='requestList')
+    def request_List(self, request, pk=None):
 
+        # get reuest list of author
+        # URL: /author/{author_id}/friendrequests
+        response = {"query": "requests", "requests": []}
+        
+        try:
+            # get user object
+            user = User.objects.get(id=pk)
+        except:
+            response["error"] = "Author is not from this server"
+            return Response(response, status=400)
+                
+        # get friends from following model
+        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
+        query = Following.objects.filter(receiver=userUrl)
+        
+        requestList = []
+
+        # add to friend list
+        for request in query:
+            if ((request.status != True) and (request.status != False)):
+                requestList.append(request.sender)
+
+        response["requests"] = requestList
+        return Response(response, status=200)
 
 
 
