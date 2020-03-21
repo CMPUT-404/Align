@@ -46,6 +46,4 @@ urlpatterns = [
     url(r'^users/login$', user_views.LoginView.as_view()),
     url(r'^users/register$', user_views.RegisterView.as_view()),
     url(r'^users/validate$', user_views.ValidateView.as_view()),
-    url(r'^deletefriend', friends_views.delete_friend),                                 # TODO: fix url if possible
-    url(r'^deletefollowing', friends_views.delete_following),
 ]

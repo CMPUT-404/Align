@@ -19,7 +19,7 @@ User = get_user_model()
 class Following(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sender = models.URLField(blank=False)                                                     # could be a remote user
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiver")     # should be our own user
+    receiver = models.URLField(blank=False)     # should be our own user
     # Status: {
     # True: both are friend, can be rejected (back to single-directionally without request notification)
     # False: sender follows receiver single-directionally,

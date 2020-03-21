@@ -1,6 +1,4 @@
-import copy
 from django.shortcuts import render
-import json
 from django.http import HttpResponse, Http404
 
 # Create your views here.
@@ -38,7 +36,15 @@ class FollowingViewSet(viewsets.ModelViewSet):
             requestInfo = request.data
             senderUrl, receiverUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
     
-            # prepare data for serializer
+            senderUser = get_user_by_url(senderUrl)
+            receiverUser = get_user_by_url(receiverUrl)
+            
+            if ((senderUser == None) and (receiverUser == None)):
+                # none of the users are from our server ignore
+                response["error"] = "None of the users are from our server"
+                return Response(response)
+            
+            # else, prepare data for serializer
             data = {"receiver": receiverUrl, "sender": senderUrl}
             
         except:
@@ -50,7 +56,7 @@ class FollowingViewSet(viewsets.ModelViewSet):
             response["error"] = "You cannot follow yourself!"
             return Response(response, status=400)
     
-        # serialize and check for error
+        # serialize and check for errors
         serializer = FollowingSerializer(data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
@@ -91,6 +97,12 @@ class FollowingViewSet(viewsets.ModelViewSet):
     # def destroy(self, request, pk=None):
     #     pass
     
+    
+    
+    
+    
+    
+    
     @action(methods=['post'], detail=False, url_path='accept', url_name='acceptFriend')
     def accept_friend_request(self, request, pk=None):
         
@@ -102,16 +114,15 @@ class FollowingViewSet(viewsets.ModelViewSet):
             # get data necessary
             requestInfo = request.data
             receiverUrl, senderUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
-            receiverUser = get_user_by_url(receiverUrl)
             
         except:
             # parsing error
             response["error"] = "Unable to parse message as expected"
             return Response(response, status=400)
         
-        result = Following.objects.filter(sender=senderUrl, receiver=receiverUser).first()
+        result = Following.objects.filter(sender=senderUrl, receiver=receiverUrl).first()
         if (result == None):
-            # no friend request sent
+            # no friend request was sent
             response["error"] = "No friend request matches the given details"
             return Response(response, status=400)
         
@@ -135,103 +146,203 @@ class FollowingViewSet(viewsets.ModelViewSet):
             response["message"] = "Friend request accepted"
             try:
                 # accept reverse relation on our server
-                senderUser = get_user_by_url(senderUrl)
-                result = Following.objects.filter(sender=receiverUrl, receiver=senderUser).first()
+                result = Following.objects.filter(sender=receiverUrl, receiver=senderUrl).first()
                 if (result != None):
                     result.status = True
+                    result.save()
             except:
-                # no reverse relation of sender is not our user
+                # no reverse relation
                 pass
             return Response(response, status=200)
         
         return Response(response)
     
 
-    @action(methods=['post'], detail=False, url_path='accept', url_name='acceptFriend')
-    def reject_friend_request(request):
-        receiver = request.user
-        sender_id = request.data["sender"]
-        #request_id = request.data["id"]
+
+
+
+
+
+
+
+
+    @action(methods=['post'], detail=False, url_path='reject', url_name='rejectFriend')
+    def reject_friend_request(self, request, pk=None):
+        
+        response = {"query": "friendreject", 
+                    "success": False,
+                    "message": "Friend request not rejected"}
+        
         try:
-            r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
-            if r == None:
-                raise RuntimeError()
-            if r.receiver != receiver:
-                return Response("The request cannot be accepted, because the current user is not the receiver of the friend request", status=400)
-            if r.status == False:
-                return Response("The request cannot be rejected, because its status is {}".format(r.status), status=400)
-            r.status = False    
-            r.save()
-            return Response("Friend request rejected", status=200)
+            # get data necessary
+            requestInfo = request.data
+            receiverUrl, senderUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
+            
         except:
-            return Response("The request with id {} not found".format(sender_id), status=400)
+            # parsing error
+            response["error"] = "Unable to parse message as expected"
+            return Response(response, status=400)
+        
+        result = Following.objects.filter(sender=senderUrl, receiver=receiverUrl).first()
+        if (result == None):
+            # no friend request was sent
+            response["error"] = "No friend request matches the given details"
+            return Response(response, status=400)
+        
+        if (result.status == True):
+            # already friends, can't reject
+            response["error"] = "The users are already friends"
+            return Response(response, status=400)
+        
+        if (result.status == False):
+            # already rejected, an error but not a serious one
+            response["success"] = True
+            response["message"] = "Friend request rejected"
+            response["error"] = "The user has already rejected this request"
+            return Response(response, status=200)
+        
+        if (result.status == None):
+            # good
+            result.status = False
+            result.save()
+            response["success"] = True
+            response["message"] = "Friend request rejected"
+            return Response(response, status=200)
+        
+        return Response(response)
 
 
 
-## TODO NEED TO ACCORDING TO USER AND STATUS
-#@api_view(['POST'])
-#@permission_classes([IsAuthenticated])
-#def reject_friend_request(request):
-#    receiver = request.user
-#    sender_id = request.data["sender"]
-#    #request_id = request.data["id"]
-#    try:
-#        r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
-#        if r == None:
-#            raise RuntimeError()
-#        if r.receiver != receiver:
-#            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request", status=400)
-#        if r.status == False:
-#            return Response("The request cannot be rejected, because its status is {}".format(r.status), status=400)
-#        r.status = False    
-#        r.save()
-#        return Response("Friend request rejected", status=200)
-#    except:
-#        return Response("The request with id {} not found".format(sender_id), status=400)
 
 
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def delete_friend(request):
-    deleting = request.user
-    to_delete = request.data["friend"]
-    try:
-        to_delete = User.objects.get(id=to_delete)
-        friendRelation1 = Following.objects.filter(sender=deleting, receiver=to_delete, status=True).first()         # this relation needs to be deleted
-        friendRelation2 = Following.objects.filter(sender=to_delete, receiver=deleting, status=True).first()         # this one needs to be modified
-        if friendRelation1 != None:
-            friendRelation1.delete()
-        if friendRelation2 != None:
-            friendRelation2.status = False
-            friendRelation2.save()
-        if friendRelation1 == None and friendRelation2 == None:
-            return Response("The current user {} is not friends with {}".format(request.user.displayName, to_delete.displayName), status=400)
-        return Response("Friend deleted", status=200)
-    except:
-        return Response("The request with id % not found".format(request.data["following"]), status=400)
 
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def delete_following(request):
-    deleting = request.user
-    to_delete = request.data["following"]
-    try:
-        to_delete = User.objects.get(id=to_delete)
-        followingRelation1 = Following.objects.filter(sender=deleting, receiver=to_delete, status=False).first()         # delete rejected request if present
-        followingRelation2 = Following.objects.filter(sender=deleting, receiver=to_delete, status=None).first()          # delete unreplied request if present
-        if followingRelation1 != None:
-            followingRelation1.delete()
-        if followingRelation2 != None:
-            followingRelation2.delete()
-        if followingRelation1 == None and followingRelation2 == None:
-            return Response("The current user {} is not following {}".format(request.user.displayName, to_delete.displayName), status=400)
-        return Response("Following deleted", status=200)
-    except:
-        return Response("The request with id % not found".format(request.data["following"]), status=400)
+    @action(methods=['post'], detail=False, url_path='deletefollower', url_name='deleteFollower')
+    def delete_follower(self, request):
+
+        response = {"query": "deletefollow", 
+                    "success": False,
+                    "message": "Following not deleted"}
+        
+        try:
+            # get data necessary
+            requestInfo = request.data
+            deleterUrl, gettingDeletedUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
+            
+        except:
+            # parsing error
+            response["error"] = "Unable to parse message as expected"
+            return Response(response, status=400)
+        
+        result = Following.objects.filter(sender=deleterUrl, receiver=gettingDeletedUrl).first()
+        if (result == None):
+            # was not following user
+            response["error"] = "No follower was found matching the given details"
+            return Response(response, status=400)
+            
+        if (result.status == True):
+            # they are friends, use other api
+            response["error"] = "Users are friends, use the deletefriend API"
+            return Response(response, status=400)
+        
+        # delete request
+        result.delete()
+        response["success"] = True
+        response["message"] = "Following deleted"
+        return Response(response, status=200)
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    @action(methods=['post'], detail=False, url_path='deletefriend', url_name='deleteFriend')
+    def delete_friend(self, request):
+
+        response = {"query": "deletefriend", 
+                    "success": False,
+                    "message": "Friend not deleted"}
+        
+        try:
+            # get data necessary
+            requestInfo = request.data
+            deleterUrl, gettingDeletedUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
+            
+        except:
+            # parsing error
+            response["error"] = "Unable to parse message as expected"
+            return Response(response, status=400)
+        
+        result1 = Following.objects.filter(sender=deleterUrl, receiver=gettingDeletedUrl).first()
+        result2 = Following.objects.filter(sender=gettingDeletedUrl, receiver=deleterUrl).first()
+        
+        if ((result1 == None) and (result2 == None)):
+            # not in db
+            response["error"] = "No friend was found matching the given details"
+            return Response(response, status=400)
+        
+        if (result1 != None):
+            # deleter was the sender
+            
+            if (result1.status != True):
+                # they are not friends
+                response["error"] = "Users are not currently friends"
+                return Response(response, status=400)
+            
+            if (result2 != None):
+                # change reverse relation
+                result2.status = False
+                result2.save()
+                result1.delete()
+                
+            else:
+                # reverse relation doesn't exist
+                result1.status = False
+                result1.save()
+                
+            response["success"] = True
+            response["message"] = "Friend deleted"
+            return Response(response, status=200)
+        
+        else:
+            # deleter was the receiver
+            
+            if (result2.status != True):
+                # they are not friends
+                response["error"] = "Users are not currently friends"
+                return Response(response, status=400)
+            
+            if (result1 != None):
+                # change reverse relation
+                result1.status = False
+                result1.save()
+                result2.delete()
+                
+            else:
+                # reverse relation doesn't exist
+                result2.status = False
+                result2.save()
+                
+            response["success"] = True
+            response["message"] = "Friend deleted"
+            return Response(response, status=200)
+                
+            
+                
+            
+                
+        
+                
+            
 
 
 class AuthorViewSet(viewsets.ModelViewSet):
@@ -306,6 +417,14 @@ class AuthorViewSet(viewsets.ModelViewSet):
             responseDictionary = {"Error": "Page does not exist"}
             return Response(responseDictionary)
 
+
+
+
+
+
+
+
+
     @action(methods=['get'], detail=True, url_path='friends/(?P<sk>[^/.]+)', url_name='areFriends')
     def areFriends(self, request, pk=None, sk=None):
         # ask if 2 authors are friends
@@ -346,8 +465,8 @@ def normalize(str1, str2):
 def get_user_by_url(url):
     try:
         user_id = str(url).split("/")[-2]
+        return User.objects.get(id=user_id)
     except:
-        user_id = str(url).split("/")[-1]
-    return User.objects.get(id=user_id)
+        return None
     
     
