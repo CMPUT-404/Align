@@ -203,8 +203,8 @@ class FollowingViewSet(viewsets.ModelViewSet):
 
 
 
-    @action(methods=['post'], detail=False, url_path='deletefollower', url_name='deleteFollower')
-    def delete_follower(self, request):
+    @action(methods=['post'], detail=False, url_path='deletefollowing', url_name='deleteFollowing')
+    def delete_following(self, request):
 
         response = {"query": "deletefollow", 
                     "success": False,
@@ -497,9 +497,9 @@ class AuthorViewSet(viewsets.ModelViewSet):
                         response["authors"] = [userUrl, friend.receiver]
                         return Response(response, status=200)
                 
-                return Response(response, status=400)
+                return Response(response, status=200)
             except:
-                response["errors"] = "Neither of the authors are from this server"
+                response["error"] = "Neither of the authors are from this server"
                 return Response(response, status=400)
                 
 
