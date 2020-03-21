@@ -32,26 +32,24 @@ class FollowingViewSet(viewsets.ModelViewSet):
         response = {"query": "friendrequest", 
                     "success": False,
                     "message": "Friend request not sent"}
-        
-        # get data necessary
-        requestInfo = request.data
-        senderUrl = requestInfo["author"]["id"]
-        receiverUrl = requestInfo["friend"]["id"]
-        
-        # normalize urls
-        if (senderUrl[-1] != '/'):
-            senderUrl += '/'
-        if (receiverUrl[-1] != '/'):
-            receiverUrl += '/'
 
-        # prepare data for serializer
-        data = {"receiver": receiverUrl, "sender": senderUrl}
-
+        try:
+            # get data necessary
+            requestInfo = request.data
+            senderUrl, receiverUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
+    
+            # prepare data for serializer
+            data = {"receiver": receiverUrl, "sender": senderUrl}
+            
+        except:
+            response["error"] = "Unable to parse message as expected"
+            return Response(response, status=400)
+        
         # check: can't follow self
         if (senderUrl == receiverUrl):
-            response["error"] = "you cannot follow yourself!"
+            response["error"] = "You cannot follow yourself!"
             return Response(response, status=400)
-
+    
         # serialize and check for error
         serializer = FollowingSerializer(data=data, context={'request': request})
         if serializer.is_valid():
@@ -63,25 +61,25 @@ class FollowingViewSet(viewsets.ModelViewSet):
             response["error"] = serializer.errors
             return Response(response, status=400)
 
-    # shows only the requests of you
-    def list(self, request, *args, **kwargs):
-        you = UserSerializer(request.user, context={'request': request})
-
-        query1 = Following.objects.filter(receiver=request.user)
-        query2 = Following.objects.filter(sender=request.user)
-        requests_to_you = FollowingSerializer(instance=query1, many=True, context={'request': request})
-        requests_from_you = FollowingSerializer(instance=query2, many=True, context={'request': request})
-
-        for r in requests_to_you.data:
-            # get users json object
-            r['sender'] = UserSerializer(get_user_by_url(r['sender']), context={'request': request}).data
-            r['receiver'] = you.data  # do you really need your own user data?
-        for r in requests_from_you.data:
-            # get users json object
-            r['sender'] = you.data
-            r['receiver'] = UserSerializer(get_user_by_url(r['receiver']), context={'request': request}).data
-
-        return Response([*requests_to_you.data, *requests_from_you.data])
+#    # shows only the requests of you
+#    def list(self, request, *args, **kwargs):
+#        you = UserSerializer(request.user, context={'request': request})
+#
+#        query1 = Following.objects.filter(receiver=request.user)
+#        query2 = Following.objects.filter(sender=request.user)
+#        requests_to_you = FollowingSerializer(instance=query1, many=True, context={'request': request})
+#        requests_from_you = FollowingSerializer(instance=query2, many=True, context={'request': request})
+#
+#        for r in requests_to_you.data:
+#            # get users json object
+#            r['sender'] = UserSerializer(get_user_by_url(r['sender']), context={'request': request}).data
+#            r['receiver'] = you.data  # do you really need your own user data?
+#        for r in requests_from_you.data:
+#            # get users json object
+#            r['sender'] = you.data
+#            r['receiver'] = UserSerializer(get_user_by_url(r['receiver']), context={'request': request}).data
+#
+#        return Response([*requests_to_you.data, *requests_from_you.data])
 
     def update(self, request, pk=None, **kwargs):
         pass
@@ -92,57 +90,104 @@ class FollowingViewSet(viewsets.ModelViewSet):
     '''TO DELETE A REQUEST, USE DELETE /newfollowing/<following:id> (DEBUG ONLY)'''
     # def destroy(self, request, pk=None):
     #     pass
+    
+    @action(methods=['post'], detail=False, url_path='accept', url_name='acceptFriend')
+    def accept_friend_request(self, request, pk=None):
+        
+        response = {"query": "friendaccept", 
+                    "success": False,
+                    "message": "Friend request not accepted"}
+        
+        try:
+            # get data necessary
+            requestInfo = request.data
+            receiverUrl, senderUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
+            receiverUser = get_user_by_url(receiverUrl)
+            
+        except:
+            # parsing error
+            response["error"] = "Unable to parse message as expected"
+            return Response(response, status=400)
+        
+        result = Following.objects.filter(sender=senderUrl, receiver=receiverUser).first()
+        if (result == None):
+            # no friend request sent
+            response["error"] = "No friend request matches the given details"
+            return Response(response, status=400)
+        
+        if (result.status == True):
+            # already friends, an error but not a serious one
+            response["success"] = True
+            response["message"] = "Friend request accepted"
+            response["error"] = "The users are already friends"
+            return Response(response, status=200)
+        
+        if (result.status == False):
+            # already rejected
+            response["error"] = "The user has already rejected this request"
+            return Response(response, status=400)
+        
+        if (result.status == None):
+            # good
+            result.status = True
+            result.save()
+            response["success"] = True
+            response["message"] = "Friend request accepted"
+            try:
+                # accept reverse relation on our server
+                senderUser = get_user_by_url(senderUrl)
+                result = Following.objects.filter(sender=receiverUrl, receiver=senderUser).first()
+                if (result != None):
+                    result.status = True
+            except:
+                # no reverse relation of sender is not our user
+                pass
+            return Response(response, status=200)
+        
+        return Response(response)
+    
+
+    @action(methods=['post'], detail=False, url_path='accept', url_name='acceptFriend')
+    def reject_friend_request(request):
+        receiver = request.user
+        sender_id = request.data["sender"]
+        #request_id = request.data["id"]
+        try:
+            r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
+            if r == None:
+                raise RuntimeError()
+            if r.receiver != receiver:
+                return Response("The request cannot be accepted, because the current user is not the receiver of the friend request", status=400)
+            if r.status == False:
+                return Response("The request cannot be rejected, because its status is {}".format(r.status), status=400)
+            r.status = False    
+            r.save()
+            return Response("Friend request rejected", status=200)
+        except:
+            return Response("The request with id {} not found".format(sender_id), status=400)
 
 
-# TODO NEED TO ACCORDING TO USER AND STATUS
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def accept_friend_request(request):
-    receiver = request.user
-    sender_id = request.data["sender"]
-    #request_id = request.data["id"]
-    try:
-        r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
-        if r == None:
-            raise RuntimeError()
-        if r.receiver != receiver:
-            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request", status=400)
-        if r.status != None:
-            return Response("The request cannot be accepted, because its status is {}".format(r.status), status=400)    
-        r.status = True
-        r.save()
 
-        # make other friend relation true
-        reverseFollowing = Following.objects.filter(receiver=r.sender, sender=r.receiver).first()
-        if reverseFollowing != None:
-            reverseFollowing.status = True
-            reverseFollowing.save()
-
-        return Response("Friend request accepted", status=200)
-    except:
-        return Response("The request with id {} not found".format(sender_id), status=400)
-
-
-# TODO NEED TO ACCORDING TO USER AND STATUS
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def reject_friend_request(request):
-    receiver = request.user
-    sender_id = request.data["sender"]
-    #request_id = request.data["id"]
-    try:
-        r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
-        if r == None:
-            raise RuntimeError()
-        if r.receiver != receiver:
-            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request", status=400)
-        if r.status == False:
-            return Response("The request cannot be rejected, because its status is {}".format(r.status), status=400)
-        r.status = False    
-        r.save()
-        return Response("Friend request rejected", status=200)
-    except:
-        return Response("The request with id {} not found".format(sender_id), status=400)
+## TODO NEED TO ACCORDING TO USER AND STATUS
+#@api_view(['POST'])
+#@permission_classes([IsAuthenticated])
+#def reject_friend_request(request):
+#    receiver = request.user
+#    sender_id = request.data["sender"]
+#    #request_id = request.data["id"]
+#    try:
+#        r = Following.objects.filter(sender=sender_id, receiver=receiver).first()
+#        if r == None:
+#            raise RuntimeError()
+#        if r.receiver != receiver:
+#            return Response("The request cannot be accepted, because the current user is not the receiver of the friend request", status=400)
+#        if r.status == False:
+#            return Response("The request cannot be rejected, because its status is {}".format(r.status), status=400)
+#        r.status = False    
+#        r.save()
+#        return Response("Friend request rejected", status=200)
+#    except:
+#        return Response("The request with id {} not found".format(sender_id), status=400)
 
 
 
@@ -187,16 +232,6 @@ def delete_following(request):
         return Response("Following deleted", status=200)
     except:
         return Response("The request with id % not found".format(request.data["following"]), status=400)
-
-def get_user_by_url(url):
-    try:
-        user_id = str(url).split("/")[-2]
-    except:
-        user_id = str(url).split("/")[-1]
-    return User.objects.get(id=user_id)
-
-
-
 
 
 class AuthorViewSet(viewsets.ModelViewSet):
@@ -295,3 +330,24 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
         return response
 
+
+
+
+def normalize(str1, str2):
+    # normalize urls
+    if (str1[-1] != '/'):
+        str1 += '/'
+    if (str2[-1] != '/'):
+        str2 += '/'    
+    
+    return str1, str2
+
+
+def get_user_by_url(url):
+    try:
+        user_id = str(url).split("/")[-2]
+    except:
+        user_id = str(url).split("/")[-1]
+    return User.objects.get(id=user_id)
+    
+    
