@@ -13,7 +13,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             firstName=validated_data.get('firstName', ""),
             lastName=validated_data.get('lastName', ""),
             displayName=validated_data.get('displayName', ""),
-            host=validated_data.get('host', None)
+            host=validated_data.get('host', None),
+            github=validated_data.get('github', ""),
         )
 
         user.set_password(validated_data['password'])
