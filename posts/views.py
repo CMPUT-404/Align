@@ -22,41 +22,59 @@ from rest_framework.test import APIRequestFactory
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authtoken.models import Token
+#from rest_framework.authtoken.models import Token
 User = get_user_model()
+
 
 class PostsViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
+
     permission_classes = (IsAuthenticated,)  
     queryset = Posts.objects.all().filter().order_by("-publish")
     serializer_class = PostsSerializer
-    def list(self, request, *args, **kwargs):
 
-        user = request.user
-        if user.id:
-            queryset = Posts.objects.filter(Q(author = user)|Q(visibilities = True)|Q(visible_to__icontains = user.id)).order_by("-publish")
-            serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
-            return Response(serializer_class.data)
+    #def list(self, request, *args, **kwargs):
+    #    queryset = Posts.objects.filter(visibilities = True).order_by("-publish")
+     #   serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+      #  return Response(serializer_class.data)
+    
+@api_view(['GET'])
+def get_public_posts(request):
+    queryset = Posts.objects.filter(visibilities = True).order_by("-publish")
+    serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+    return Response(serializer_class.data)
+
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_posts_author(request,author_id):
     factory = APIRequestFactory()
     requests = factory.get('/')
-    #code = request.META['HTTP_AUTHORIZATION']
-    #print("_____________________")
-    #print(code)
     if request.method == 'GET':
         serializer_context = {
             'request': Request(requests),
         }
-        #id = request.data.get('id')
-        #print(id)
         author_obj = User.objects.get(id = author_id)
         queryset = Posts.objects.all().filter(author = author_obj).order_by("-publish")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
-        #data = serializers.serialize('json', self.get_queryset())
+        return Response(serializer_class.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_posts_by_auth(request):
+    factory = APIRequestFactory()
+    requests = factory.get('/')
+    if request.method == 'GET':
+        serializer_context = {
+            'request': Request(requests),
+        }
+        user = request.user
+        current_obj = user
+        queryset = Posts.objects.all().filter(Q(visibilities = True)|Q(visible_to__icontains = current_obj.id)|Q(author = current_obj)).order_by("-publish")
+        serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         return Response(serializer_class.data)
 
 @api_view(['GET'])
@@ -70,21 +88,10 @@ def get_posts(request,author_id):
         serializer_context = {
             'request': Request(requests),
         }
-        #id = request.data.get('id')
-#         #print(id)
-        try:
-            code = request.META['HTTP_AUTHORIZATION']
-            #print(code[6:])
-        except:
-            pass
-        token = Token.objects.get(key=code[6:])
-        current_obj = User.objects.get(id = token.user_id)
+        current_obj = request.user
         author_obj = User.objects.get(id = author_id)
-        print(token.user_id)
-        print(author_id)
-        queryset = Posts.objects.all().filter(author = author_obj).filter(Q(visibilities = True)|Q(visible_to__icontains = token.user_id)|Q(author = current_obj)).order_by("-publish")
+        queryset = Posts.objects.all().filter(author = author_obj).filter(Q(visibilities = True)|Q(visible_to__icontains = current_obj.id)|Q(author = current_obj)).order_by("-publish")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
-        #data = serializers.serialize('json', self.get_queryset())
         return Response(serializer_class.data)
     else:
         HttpResponse.status_code = 403

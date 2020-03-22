@@ -49,6 +49,7 @@ urlpatterns = [
     #path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^posts$', posts_views.get_public_posts),
     url(r'^author/login$', user_views.LoginView.as_view()),
     url(r'^author/register$', user_views.RegisterView.as_view()),
     url(r'^author/validate$', user_views.ValidateView.as_view()),
