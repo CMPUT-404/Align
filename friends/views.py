@@ -64,7 +64,7 @@ class FollowingViewSet(viewsets.ModelViewSet):
             serializer.save()
             response["success"] = True
             response["message"] = "Friend request sent"
-            return Response(serializer.data, status=200)
+            return Response(response, status=200)
         else:
             response["error"] = serializer.errors
             return Response(response, status=400)
@@ -434,8 +434,12 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
         # add to friend list
         for follower in query:
-            if (follower.status != True):
-                followerList.append(follower.receiver)
+            followerList.append(follower.receiver)
+
+        query = Following.objects.filter(receiver=userUrl)
+        for follower in query:
+            if (follower.status == True):
+                followerList.append(follower.receiver)	
 
         response["authors"] = followerList
         return Response(response, status=200)
