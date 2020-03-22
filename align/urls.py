@@ -30,6 +30,7 @@ router = routers.DefaultRouter()
 router.register(r'groups', user_views.GroupViewSet)
 
 router.register(r'posts', posts_views.PostsViewSet,basename='Post-list')
+router.register(r'server', posts_views.ServerViewSet)
 #router.register(r'comments', comments_views.CommentsViewSet)
 
 router.register(r'friendrequest', friends_views.FollowingViewSet)

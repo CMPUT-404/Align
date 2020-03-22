@@ -1,4 +1,4 @@
-from posts.models import Posts
+from posts.models import Posts, Server
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 import datetime
@@ -98,3 +98,19 @@ class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Posts
         fields = ['title','author', 'description','content','visibilities','visible_to','publish']
+
+
+class ServerSerializer(serializers.HyperlinkedModelSerializer):
+    def create(self, validated_data):
+        print(validated_data)
+        following = Server.objects.create(
+                domain=validated_data.get("domain"),
+                status=True,
+        )
+
+        return following
+
+    class Meta:
+        model = Server
+        fields = ['id', "domain", 'status']
+        read_only_fields = ('status', 'id')

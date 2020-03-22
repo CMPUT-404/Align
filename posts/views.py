@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 # Create your views here.
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
-from posts.models import Posts
-from posts.serializers import PostsSerializer,PostsCreateSerializer
+from posts.models import Posts, Server
+from posts.serializers import PostsSerializer, PostsCreateSerializer, ServerSerializer
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
@@ -167,3 +167,23 @@ def get_posts(request,author_id):
 #         return Response(serializer_class.data)
 #     else:
 #         return HttpResponse("the should be a Get request")
+
+
+class ListOrAdminOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow access to lists for admins
+    """
+
+    def has_permission(self, request, view):
+        return view.action == 'list' or request.user and request.user.is_staff
+
+
+class ServerViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    permission_classes = [
+        ListOrAdminOnly
+    ]
+    queryset = Server.objects.all().filter()
+    serializer_class = ServerSerializer

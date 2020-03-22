@@ -23,3 +23,9 @@ class Posts(models.Model):
 	#images = models.ImageField(blank=True)
 	publish = models.DateTimeField(blank=True,default=timezone.now)
 	#author_data = User.objects.prefetch_related('posts')
+
+
+class Server(models.Model):
+	id = models.AutoField(primary_key=True)
+	domain = models.URLField(max_length=300, unique=True)
+	status = models.BooleanField(default=True)
