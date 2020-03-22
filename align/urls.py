@@ -32,14 +32,8 @@ router.register(r'groups', user_views.GroupViewSet)
 router.register(r'posts', posts_views.PostsViewSet,basename='Post-list')
 #router.register(r'comments', comments_views.CommentsViewSet)
 
-router.register(r'friendrequest', friends_views.FriendRequestViewSet)
-
-router.register(r'newfollowing', friends_views.FollowingViewSet, basename="newfollowing")  # new following
-
+router.register(r'friendrequest', friends_views.FollowingViewSet)
 router.register(r'author', friends_views.AuthorViewSet, basename="author")
-
-router.register(r'friend', friends_views.FriendViewSet, basename="friend")
-router.register(r'following', friends_views.FollowersViewSet, basename="following")
 
 
 urlpatterns = [
