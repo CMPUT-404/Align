@@ -47,8 +47,4 @@ urlpatterns = [
     url(r'^author/login$', user_views.LoginView.as_view()),
     url(r'^author/register$', user_views.RegisterView.as_view()),
     url(r'^author/validate$', user_views.ValidateView.as_view()),
-    url(r'^newfollowing/accept', friends_views.accept_friend_request),
-    url(r'^newfollowing/reject', friends_views.reject_friend_request),
-    url(r'^deletefriend', friends_views.delete_friend),                                 # TODO: fix url if possible
-    url(r'^deletefollowing', friends_views.delete_following),
 ]
