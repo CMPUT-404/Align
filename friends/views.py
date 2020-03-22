@@ -333,16 +333,11 @@ class AuthorViewSet(viewsets.ModelViewSet):
     API endpoint for friend questions
     """
 
-    queryset = Following.objects.all()
-    serializer_class = FollowingSerializer
-    # all apis in following need perms
     permission_classes = [
         permissions.IsAuthenticated
     ]
-    
-    
-    
-    
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
 
     @action(methods=['post', 'get'], detail=True, url_path='friends', url_name='friendList')
     def friend_List(self, request, pk=None):
@@ -407,7 +402,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
                 return Response(response,status=400)
 
         else:
-            response["error"] = "Page does not exist"
+            response = {"error": "Page does not exist"}
             return Response(response, status=405)
 
 
