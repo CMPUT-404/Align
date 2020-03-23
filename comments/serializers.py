@@ -10,13 +10,13 @@ class CommentsSerializer(serializers.Serializer):
     auth = serializers.SerializerMethodField()
     root = serializers.SerializerMethodField()
     comment = serializers.SerializerMethodField()
-    author_data = serializers.SerializerMethodField()
+    author = serializers.SerializerMethodField()
     contentType = serializers.SerializerMethodField()
-    publish = serializers.SerializerMethodField()
+    published = serializers.SerializerMethodField()
 
     class Meta:
         model = Comments
-        fields = ['id','auth','root', 'comment','publish']
+        fields = ['id','auth','root', 'comment','published','author']
 
     def get_id(self,obj):
         return (obj.id)
@@ -26,12 +26,12 @@ class CommentsSerializer(serializers.Serializer):
         return (obj.root.id)
     def get_comment(self,obj):
         return (obj.comment)
-    def get_publish(self,obj):
-        return (obj.publish)
+    def get_published(self,obj):
+        return (obj.published)
 
-    def get_author_data(self,obj):
+    def get_author(self,obj):
         user = User.objects.get(id = obj.auth)
-        return {"id": user.id, "username": user.username, "email": user.email, "bio": user.bio, "host": user.host, "firstName": user.firstName,"lastName": user.lastName, "displayName": user.displayName,"github":user.github}
+        return {"id": user.id, "host": user.host, "displayName": user.displayName}
     def get_contentType(self,obj):
         return ("text/plain")
 
@@ -43,7 +43,7 @@ class CommentsCreateSerializer(serializers.Serializer):
             auth = a,
             root = post,
             comment = b,
-            publish = str(datetime.datetime.now()),
+            published = str(datetime.datetime.now()),
             )
         comment.save()
         return True
@@ -57,4 +57,4 @@ class CommentsCreateSerializer(serializers.Serializer):
             return false
     class Meta:
         model = Comments
-        fields = ['auth','root','comment','publish']
+        fields = ['auth','root','comment','published']

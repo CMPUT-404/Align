@@ -32,19 +32,22 @@ class PostsViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = (IsAuthenticated,)  
-    queryset = Posts.objects.all().filter().order_by("-publish")
+    queryset = Posts.objects.all().filter().order_by("-published")
     serializer_class = PostsSerializer
 
-    #def list(self, request, *args, **kwargs):
-    #    queryset = Posts.objects.filter(visibilities = True).order_by("-publish")
-     #   serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
-      #  return Response(serializer_class.data)
+    def retrieve(self, request, *args, **kwargs):
+        a = kwargs['pk']
+        queryset = Posts.objects.all().filter(id = a).order_by("-published")
+        serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+        dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
+        return Response(dict)
     
 @api_view(['GET'])
 def get_public_posts(request):
-    queryset = Posts.objects.filter(visibilities = True).order_by("-publish")
+    queryset = Posts.objects.filter(visibility = True).order_by("-published")
     serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
-    return Response(serializer_class.data)
+    dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
+    return Response(dict)
 
 
 
@@ -58,9 +61,10 @@ def get_posts_author(request,author_id):
             'request': Request(requests),
         }
         author_obj = User.objects.get(id = author_id)
-        queryset = Posts.objects.all().filter(author = author_obj).order_by("-publish")
+        queryset = Posts.objects.all().filter(author_obj = author_obj).order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
-        return Response(serializer_class.data)
+        dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
+        return Response(dict)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -73,9 +77,10 @@ def get_posts_by_auth(request):
         }
         user = request.user
         current_obj = user
-        queryset = Posts.objects.all().filter(Q(visibilities = True)|Q(visible_to__icontains = current_obj.id)|Q(author = current_obj)).order_by("-publish")
+        queryset = Posts.objects.all().filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
-        return Response(serializer_class.data)
+        dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
+        return Response(dict)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -90,9 +95,10 @@ def get_posts(request,author_id):
         }
         current_obj = request.user
         author_obj = User.objects.get(id = author_id)
-        queryset = Posts.objects.all().filter(author = author_obj).filter(Q(visibilities = True)|Q(visible_to__icontains = current_obj.id)|Q(author = current_obj)).order_by("-publish")
+        queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
-        return Response(serializer_class.data)
+        dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
+        return Response(dict)
     else:
         HttpResponse.status_code = 403
         return HttpResponse("All the method other than get is not allowed")

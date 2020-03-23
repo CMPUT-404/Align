@@ -10,20 +10,23 @@ User = get_user_model()
         #fields = ['username', 'email', 'bio', 'host', 'firstName', 'lastName', 'displayName', 'url', 'github', 'groups']
 
 class PostsSerializer(serializers.HyperlinkedModelSerializer):
-    author_data = serializers.SerializerMethodField()
+    author = serializers.SerializerMethodField()
     contentType = serializers.SerializerMethodField()
+    unlisted = serializers.SerializerMethodField()
     #visible = serializers.SerializerMethodField()
     class Meta:
         model = Posts
-        fields = ['id','title','author','author_data', 'description','contentType','content','categories','visibilities','visible_to','publish']
+        fields = ['id','title','author_obj','author', 'description','contentType','content','categories','visibility','visibleTo','published','image','unlisted']
 
-    def get_author_data(self,obj):
-        return {"id": obj.author.id, "username": obj.author.username, "email": obj.author.email, "bio": obj.author.bio, "host": obj.author.bio, "firstName": obj.author.firstName,"lastName": obj.author.lastName, "displayName": obj.author.displayName,"github":obj.author.github}
-        #print(real_id)
-        #return User.objects.get(id = real_id)
+    def get_author(self,obj):
+        user_id = str(obj.author_obj.id)
+        return {"id": obj.author_obj.id, "host": obj.author_obj.host, "displayName": obj.author_obj.displayName,"url": "https://cloud-align-server.herokuapp.com/author/" + user_id +"/" ,"github":obj.author_obj.github}
 
     def get_contentType(self,obj):
         return ("text/plain")
+    
+    def get_unlisted(self,obj):
+        return (False)
         '''
     def create(self, obj):
         if obj["visible_to"] == "":
@@ -57,7 +60,7 @@ class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
     @classmethod
     def create(self, validated_data):
         author_id = validated_data.get("author",Posts.author)
-        author_obj = User.objects.get(id = author_id)
+        author = User.objects.get(id = author_id)
         '''
         if validated_data.get('visible_to', Posts.visible_to) == "":
             vis = author_id
@@ -70,14 +73,15 @@ class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
         #print(author_obj.id)
         post = Posts(
             title=validated_data.get('title', Posts.title),
-            author = author_obj,
+            author_obj = author,
             #author=validated_data.get('author', Posts.author),
             description=validated_data.get('description', Posts.description),
             content=validated_data.get('content', Posts.content),
-            visibilities=validated_data.get('visibilities', Posts.visibilities),
+            visibility=validated_data.get('visibilities', Posts.visibilities),
             #visible_to = vis,
-            visible_to = validated_data.get('visible_to', Posts.visible_to),
-            publish = str(datetime.datetime.now())
+            image = validated_data.get('image', Posts.image),
+            visibleTo = validated_data.get('visibleTo', Posts.visibleTo),
+            published = str(datetime.datetime.now())
         )
         post.save()
         return True
@@ -97,7 +101,7 @@ class PostsCreateSerializer(serializers.HyperlinkedModelSerializer):
             #raise RuntimeError("Unable to delete friend request")
     class Meta:
         model = Posts
-        fields = ['title','author', 'description','content','visibilities','visible_to','publish']
+        fields = ['title','author', 'description','content','visibilities','visible_to','published']
 
 
 class ServerSerializer(serializers.HyperlinkedModelSerializer):
