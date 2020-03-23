@@ -1,9 +1,10 @@
+from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import render
 from django.http import HttpResponse, Http404
 
 # Create your views here.
 from django.contrib.auth import get_user_model
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
 from friends.models import Following
@@ -323,9 +324,36 @@ class FollowingViewSet(viewsets.ModelViewSet):
                 
             
                 
-        
-                
-            
+class AuthorPermissionSet(permissions.BasePermission):
+    """
+    Custom permission to only allow access to lists for admins
+    """
+
+    def has_permission(self, request, view):
+        # free for all
+        if view.action == 'retrieve':
+            return True
+
+        # user ok
+        elif view.action == 'update':
+            return request.user and type(request.user) != AnonymousUser
+
+        elif view.action == 'list':
+            return request.user and type(request.user) != AnonymousUser
+
+        elif view.action == 'partial_update':
+            return request.user and type(request.user) != AnonymousUser
+
+        # admin only
+        elif view.action == 'destroy':
+            return request.user and request.user.is_staff
+
+        elif view.action == 'create':
+            return request.user and request.user.is_staff
+
+        # i dont handle
+        else:
+            return True
 
 
 class AuthorViewSet(viewsets.ModelViewSet):
@@ -334,10 +362,36 @@ class AuthorViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [
-        permissions.IsAuthenticated
+        AuthorPermissionSet
     ]
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        a = kwargs['pk']
+        queryset = User.objects.get(id=a)
+        serializer = UserSerializer(instance=queryset, context={'request': request})
+
+        # get friends from following model
+        userUrl, _ = normalize(UserSerializer(queryset, context={'request': request}).data["url"], '/')
+        query1 = Following.objects.filter(receiver=userUrl, status=True)
+        query2 = Following.objects.filter(sender=userUrl, status=True)
+
+        friendList = []
+
+        # add to friend list
+        for friend in query1:
+            friendList.append(friend.sender)
+
+        for friend in query2:
+            friendList.append(friend.receiver)
+
+        data = dict(serializer.data)
+
+        data["friends"] = friendList
+
+        return Response(data)
+
 
     @action(methods=['post', 'get'], detail=True, url_path='friends', url_name='friendList')
     def friend_List(self, request, pk=None):
