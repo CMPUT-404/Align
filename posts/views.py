@@ -44,7 +44,8 @@ class PostsViewSet(viewsets.ModelViewSet):
     
 @api_view(['GET'])
 def get_public_posts(request):
-    queryset = Posts.objects.filter(visibility = True).order_by("-published")
+    #queryset = Posts.objects.filter(visibility = True).order_by("-published")
+    queryset = Posts.objects.filter(visibility = "PUBLIC").order_by("-published")
     serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
     dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
     return Response(dict)
@@ -77,7 +78,8 @@ def get_posts_by_auth(request):
         }
         user = request.user
         current_obj = user
-        queryset = Posts.objects.all().filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
+        #queryset = Posts.objects.all().filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
+        queryset = Posts.objects.all().filter(Q(visibility = "PUBLIC")|Q(author_obj = current_obj)).order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
         return Response(dict)
@@ -95,7 +97,8 @@ def get_posts(request,author_id):
         }
         current_obj = request.user
         author_obj = User.objects.get(id = author_id)
-        queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
+        #queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
+        queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "PUBLIC")|Q(author_obj = current_obj)).order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
         return Response(dict)

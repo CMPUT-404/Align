@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import ArrayField
 # Create your models here.
 User = get_user_model()
 
@@ -17,7 +18,7 @@ class Posts(models.Model):
         'web',
         'tutorial'
     ]
-	visibility = models.BooleanField(default = True)
+	visibility = models.TextField(blank=True,default = "PUBLIC",max_length=300)
 	visibleTo = models.TextField(blank=True,max_length=300)
 	image = models.TextField(blank=True,max_length=300)
 	published = models.DateTimeField(blank=True,default=timezone.now)
