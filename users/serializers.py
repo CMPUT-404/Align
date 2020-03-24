@@ -13,7 +13,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             firstName=validated_data.get('firstName', ""),
             lastName=validated_data.get('lastName', ""),
             displayName=validated_data.get('displayName', ""),
-            host=validated_data.get('host', None),
+            host=validated_data.get('host', "https://cloud-align-server.herokuapp.com/"),
             github=validated_data.get('github', ""),
         )
 
@@ -44,7 +44,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = ['id', 'password', 'username', 'email', 'bio', 'host', 'firstName', 'lastName', 'displayName', 'url', 'github', 'groups']
         extra_kwargs = {'password': {'write_only': True}}
-        read_only_fields = ('id',)
+        read_only_fields = ('id', 'host')
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):

@@ -70,7 +70,7 @@ class RegisterView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         #data = QueryDict.copy(request.data)
         data = copy.deepcopy(request.data)
-        data["host"] = self.get_client_ip(request)
+        #data["host"] = self.get_client_ip(request)
         print(data)
         serializer = UserSerializer(data=data, context={'request': request})
         if serializer.is_valid():
