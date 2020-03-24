@@ -33,6 +33,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         data = super().to_representation(instance)
         for key, value in data.items():
             try:
+                data["id"] = data["url"]
                 if not value:
                     data[key] = ""
             except:
