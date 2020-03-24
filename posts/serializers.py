@@ -4,6 +4,8 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 import datetime
 from comments.serializers import CommentsPostSerializer
+from users.serializers import UserSerializer
+
 User = get_user_model()
 
 #class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -22,8 +24,7 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['id','title','author_obj','author', 'description','contentType','content','categories','visibility','visibleTo','comments','published','image','unlisted']
 
     def get_author(self,obj):
-        user_id = str(obj.author_obj.id)
-        return {"id": obj.author_obj.id, "host": obj.author_obj.host, "displayName": obj.author_obj.displayName,"url": "https://cloud-align-server.herokuapp.com/author/" + user_id +"/" ,"github":obj.author_obj.github}
+        return UserSerializer(instance=obj.author_obj, context=self.context).data
 
     def get_contentType(self,obj):
         return ("text/plain")
@@ -32,9 +33,12 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
         return (False)
 
     def get_comments(self,obj):
-        queryset = Comments.objects.all().filter(root = obj).order_by("-published")
-        serializer_class = CommentsPostSerializer(instance=queryset, many=True)
-        return(serializer_class.data)
+        try:
+            queryset = Comments.objects.all().filter(root = obj).order_by("-published")
+            serializer_class = CommentsPostSerializer(instance=queryset, many=True)
+            return(serializer_class.data)
+        except:
+            return []
         '''
     
     def create(self, obj):

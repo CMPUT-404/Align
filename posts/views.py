@@ -35,6 +35,7 @@ class PostsViewSet(viewsets.ModelViewSet):
     queryset = Posts.objects.all().filter().order_by("-published")
     serializer_class = PostsSerializer
 
+
     def retrieve(self, request, *args, **kwargs):
         a = kwargs['pk']
         queryset = Posts.objects.all().filter(id = a).order_by("-published")
