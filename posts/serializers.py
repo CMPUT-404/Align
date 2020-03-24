@@ -1,7 +1,9 @@
 from posts.models import Posts, Server
+from comments.models import Comments
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 import datetime
+from comments.serializers import CommentsPostSerializer
 User = get_user_model()
 
 #class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -13,10 +15,11 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
     author = serializers.SerializerMethodField()
     contentType = serializers.SerializerMethodField()
     unlisted = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
     #visible = serializers.SerializerMethodField()
     class Meta:
         model = Posts
-        fields = ['id','title','author_obj','author', 'description','contentType','content','categories','visibility','visibleTo','published','image','unlisted']
+        fields = ['id','title','author_obj','author', 'description','contentType','content','categories','visibility','visibleTo','comments','published','image','unlisted']
 
     def get_author(self,obj):
         user_id = str(obj.author_obj.id)
@@ -27,7 +30,13 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
     
     def get_unlisted(self,obj):
         return (False)
+
+    def get_comments(self,obj):
+        queryset = Comments.objects.all().filter(root = obj).order_by("-published")
+        serializer_class = CommentsPostSerializer(instance=queryset, many=True)
+        return(serializer_class.data)
         '''
+    
     def create(self, obj):
         if obj["visible_to"] == "":
             visible_list = obj["author"].id

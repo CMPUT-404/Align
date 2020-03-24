@@ -35,6 +35,30 @@ class CommentsSerializer(serializers.Serializer):
     def get_contentType(self,obj):
         return ("text/plain")
 
+class CommentsPostSerializer(serializers.Serializer):
+    id = serializers.SerializerMethodField()
+    author = serializers.SerializerMethodField()
+    comment = serializers.SerializerMethodField()
+    contentType = serializers.SerializerMethodField()
+    published = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comments
+        fields = ['id','contentType', 'comment','published','author']
+
+    def get_id(self,obj):
+        return (obj.id)
+    def get_comment(self,obj):
+        return (obj.comment)
+    def get_published(self,obj):
+        return (obj.published)
+    def get_author(self,obj):
+        user = User.objects.get(id = obj.auth)
+        user_id = str(user.id)
+        return {"id": user.id, "url":"https://cloud-align-server.herokuapp.com/author/" + user_id +"/","host": user.host, "displayName": user.displayName,"github":user.github}
+    def get_contentType(self,obj):
+        return ("text/plain")
+
 class CommentsCreateSerializer(serializers.Serializer):
     @classmethod
     def create(self, a,b,post_id):
