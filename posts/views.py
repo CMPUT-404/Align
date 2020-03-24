@@ -74,14 +74,14 @@ def get_posts_by_auth(request):
     factory = APIRequestFactory()
     requests = factory.get('/')
     if request.method == 'GET':
-        serializer_context = {
-            'request': Request(requests),
-        }
+        # serializer_context = {
+        #     'request': Request(requests),
+        # }
         user = request.user
         current_obj = user
         #queryset = Posts.objects.all().filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
         queryset = Posts.objects.all().filter(Q(visibility = "PUBLIC")|Q(author_obj = current_obj)).order_by("-published")
-        serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
+        serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
         dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
         return Response(dict)
 
