@@ -493,7 +493,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
         query = Following.objects.filter(receiver=userUrl)
         for follower in query:
             if (follower.status == True):
-                followerList.append(follower.receiver)	
+                followerList.append(follower.sender)	
 
         response["authors"] = followerList
         return Response(response, status=200)
