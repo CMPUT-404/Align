@@ -11,19 +11,20 @@ class Posts(models.Model):
 	id = models.AutoField(primary_key=True)
 	title = models.CharField(max_length=300)
 	# it has a author (many to one)
-	author_obj = models.ForeignKey(User, related_name='posts',on_delete = models.CASCADE)
-	description = models.TextField(blank=True,max_length=300)
-	content = models.TextField(blank=True,max_length=300)
+	author_obj = models.ForeignKey(User, related_name='posts', on_delete=models.CASCADE)
+	description = models.TextField(blank=True, max_length=300)
+	content = models.TextField(blank=True, max_length=300)
 	categories = [
         'web',
         'tutorial'
     ]
-	#visibility = models.BooleanField(default = True)
-	visibility = models.TextField(blank=True,default = "PUBLIC",max_length=300)
-	visibleTo = models.TextField(blank=True,max_length=300)
+	visibility = models.TextField(blank=True, default="PUBLIC", max_length=300)
+	visibleTo = models.TextField(blank=True, max_length=300)
 	image = models.TextField(blank=True)
 	published = models.DateTimeField(blank=True,default=timezone.now)
-	#author_data = User.objects.prefetch_related('posts')
+	source = models.URLField(blank=True)
+	origin = models.URLField(blank=True)
+
 
 
 class Server(models.Model):
