@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 # Create your views here.
@@ -42,14 +43,35 @@ class PostsViewSet(viewsets.ModelViewSet):
         serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
         dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
         return Response(dict)
-    
+
 @api_view(['GET'])
 def get_public_posts(request):
     #queryset = Posts.objects.filter(visibility = True).order_by("-published")
-    queryset = Posts.objects.filter(visibility = "PUBLIC").order_by("-published")
+    queryset = Posts.objects.filter(visibility="PUBLIC").order_by("-published")
     serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
-    dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
-    return Response(dict)
+    all_posts = serializer_class.data
+    servers = Server.objects.all()
+    server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
+    for server in server_serializer.data:
+        try:
+            domain = server["domain"]
+            url = "{}posts".format(domain)
+            response = requests.get(url=url)
+            data = response.json()
+            posts = data['posts']
+            all_posts += posts
+        except Exception:
+            Response(str(Exception), status=500)
+
+    response = {
+        "query": "posts",
+        "count": len(serializer_class.data),
+        "size": None,
+        "next": None,
+        "previous": None,
+        "posts": all_posts
+    }
+    return Response(response)
 
 
 
