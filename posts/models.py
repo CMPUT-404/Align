@@ -20,7 +20,7 @@ class Posts(models.Model):
     ]
 	#visibility = models.BooleanField(default = True)
 	visibility = models.TextField(blank=True,default = "PUBLIC",max_length=300)
-	visibleTo = models.TextField(blank=True,max_length=300)
+	visibleTo = models.TextField(blank=True)
 	image = models.TextField(blank=True,max_length=300)
 	published = models.DateTimeField(blank=True,default=timezone.now)
 	#author_data = User.objects.prefetch_related('posts')
