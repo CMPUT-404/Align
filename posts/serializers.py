@@ -61,8 +61,8 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
         )
         request = self.context.get('request')
         post.save()
-        post.source = "{}/posts/{}/".format(request.META['HTTP_HOST'], post.id)
-        post.origin = "{}/posts/{}/".format(request.META['HTTP_HOST'], post.id)
+        post.source = "{}/posts/{}/".format(request.META['HTTP_ORIGIN'], post.id)
+        post.origin = "{}/posts/{}/".format(request.META['HTTP_ORIGIN'], post.id)
         post.save()
 
         return post
