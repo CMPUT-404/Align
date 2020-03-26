@@ -40,11 +40,49 @@ class PostsViewSet(viewsets.ModelViewSet):
 
 
     def retrieve(self, request, *args, **kwargs):
-        a = kwargs['pk']
-        queryset = Posts.objects.all().filter(id = a).order_by("-published")
-        serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
-        dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
-        return Response(dict)
+        postId = kwargs['pk']
+        host = request.query_params.get('host', None)
+        post = None
+
+        if host:
+            find = False
+            servers = Server.objects.all()
+            server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
+            for server in server_serializer.data:
+                if host == server["domain"]:
+                    find = True
+                    break
+            if find:
+                try:
+                    # url = "{}posts/{}".format(host, postId)  #FIXME
+                    url = '{}posts'.format(host)  # XXX workaround
+                    response = requests.get(url=url)
+                    data = response.json()
+                    posts = data['posts']
+                    for i in posts:
+                        if str(i["id"]) == str(postId):
+                            post = i
+                            break
+                    if not post:
+                        raise Exception("Cannot get the post with id = {}".format(postId))
+                except Exception as e:
+                    return Response(e.args, status=500)
+            else:
+                return Response("The host {} is not in the server list, the access is denied".format(host), status=400)
+        else:
+            queryset = Posts.objects.get(id=postId)
+            serializer_class = PostsSerializer(instance=queryset, context={'request': request})
+            post = serializer_class.data
+
+        response = {
+            "query": "getPost",
+            "count": 1,
+            "size": None,
+            "next": None,
+            "previous": None,
+            "post": post
+        }
+        return Response(response)
 
 @api_view(['GET'])
 def get_public_posts(request):
@@ -61,9 +99,11 @@ def get_public_posts(request):
             response = requests.get(url=url)
             data = response.json()
             posts = data['posts']
+            if posts is None:
+                raise Exception(data)
             all_posts += posts
-        except Exception:
-            Response(str(Exception), status=500)
+        except Exception as e:
+            return Response(e.args, status=500)
 
     response = {
         "query": "posts",
