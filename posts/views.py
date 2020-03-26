@@ -108,7 +108,7 @@ def get_posts_by_auth(request):
         userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
         #http://cloud
         #print(userUrl)
-        if userUrl[0:11] == "http://cloud":
+        if str(userUrl[0:13]) == "https://cloud":
             same_server = True
         #print("_________________")
         #print(userUrl)
