@@ -23,6 +23,8 @@ from rest_framework.test import APIRequestFactory
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
+from friends.models import Following
+from users.serializers import UserSerializer
 #from rest_framework.authtoken.models import Token
 User = get_user_model()
 
@@ -89,7 +91,7 @@ def get_posts_author(request,author_id):
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
         return Response(dict)
-
+# author/posts
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_posts_by_auth(request):
@@ -99,10 +101,73 @@ def get_posts_by_auth(request):
         # serializer_context = {
         #     'request': Request(requests),
         # }
+        # find all the user who has the friends of the current user
+        same_server = False
         user = request.user
         current_obj = user
+        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
+        #http://cloud
+        #print(userUrl)
+        if userUrl[0:11] == "http://cloud":
+            same_server = True
+        #print("_________________")
+        #print(userUrl)
+        query1 = Following.objects.filter(receiver=userUrl, status=True)
+        query2 = Following.objects.filter(sender=userUrl, status=True)
+        #print("_________________")
+        friendList = []
+        large_friendList = []
+        # add to friend list
+        for friend in query1:
+            a = friend.sender
+            #print("__________________")
+            #print(a)
+            #print(a[-37:-1])
+            #print("__________________")
+            friendList.append(a[-37:-1])
+
+        for friend in query2:
+            a = friend.receiver
+            #print("__________________")
+            #print(a)
+            #print(a[-37:-1])
+            #print("__________________")
+            friendList.append(a[-37:-1])
+        #print(friendList)
+    
+        for friend_id in friendList:
+            aList = []
+            friend_user = User.objects.filter(id = friend_id)
+
+            print(friend_user)
+            userUrl, _ = normalize(UserSerializer(friend_user[0], context={'request': request}).data["url"], '/')
+        #    print("____________________")
+        #    print(userUrl)
+        #    print("____________________")
+            query1 = Following.objects.filter(receiver=userUrl, status=True)
+            query2 = Following.objects.filter(sender=userUrl, status=True)
+            for friend in query1:
+                a = friend.sender
+                aList.append(a[-37:-1])
+
+            for friend in query2:
+                a = friend.receiver
+                aList.append(a[-37:-1])
+            
+            large_friendList = large_friendList + aList
+        #print("__________________")
+        #print(a)
+            #print(a[-37:-1])
+            #print("__________________")
+        #print("_____________________")
+        #print(large_friendList)
+        #print("_____________________")
+        # |Q(visibility = "SERVERONLY",author_obj = current_obj)|Q(visibility = "FOAF",author_obj__in = large_friendList)|Q(visibility = "PRIVATE",author_obj = current_obj)|Q(visibility = "PRIVATE",visibility__contains = current_obj)
         #queryset = Posts.objects.all().filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
-        queryset = Posts.objects.all().filter(Q(visibility = "PUBLIC")|Q(author_obj = current_obj)).order_by("-published")
+        if same_server:
+            queryset = Posts.objects.all().filter(Q(visibility = "SERVERONLY")|Q(author_obj = current_obj)|Q(visibility = "FOAF",author_obj__in = large_friendList)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = friendList)|Q(visibility = "PRIVATE",visibleTo__icontains = current_obj.id)).order_by("-published")
+        else:
+            queryset = Posts.objects.all().filter(Q(author_obj = current_obj)|Q(visibility = "FOAF",author_obj__in = large_friendList)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = friendList)|Q(visibility = "PRIVATE",visibleTo__icontains = current_obj.id)).order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
         dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
         return Response(dict)
@@ -118,10 +183,81 @@ def get_posts(request,author_id):
         serializer_context = {
             'request': Request(requests),
         }
-        current_obj = request.user
+        # serializer_context = {
+        #     'request': Request(requests),
+        # }
+        # find all the user who has the friends of the current user
+        same_server = False
+        user = request.user
+        current_obj = user
+        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
+        #http://cloud
+        #print(userUrl)
+        if userUrl[0:11] == "http://cloud":
+            same_server = True
+        #print("_________________")
+        #print(userUrl)
+        query1 = Following.objects.filter(receiver=userUrl, status=True)
+        query2 = Following.objects.filter(sender=userUrl, status=True)
+        #print("_________________")
+        friendList = []
+        large_friendList = []
+        # add to friend list
+        for friend in query1:
+            a = friend.sender
+            #print("__________________")
+            #print(a)
+            #print(a[-37:-1])
+            #print("__________________")
+            friendList.append(a[-37:-1])
+
+        for friend in query2:
+            a = friend.receiver
+            #print("__________________")
+            #print(a)
+            #print(a[-37:-1])
+            #print("__________________")
+            friendList.append(a[-37:-1])
+        #print(friendList)
+    
+        for friend_id in friendList:
+            aList = []
+            friend_user = User.objects.filter(id = friend_id)
+
+            print(friend_user)
+            userUrl, _ = normalize(UserSerializer(friend_user[0], context={'request': request}).data["url"], '/')
+        #    print("____________________")
+        #    print(userUrl)
+        #    print("____________________")
+            query1 = Following.objects.filter(receiver=userUrl, status=True)
+            query2 = Following.objects.filter(sender=userUrl, status=True)
+            for friend in query1:
+                a = friend.sender
+                aList.append(a[-37:-1])
+
+            for friend in query2:
+                a = friend.receiver
+                aList.append(a[-37:-1])
+            
+            large_friendList = large_friendList + aList
+        #print("__________________")
+        #print(a)
+            #print(a[-37:-1])
+            #print("__________________")
+        #print("_____________________")
+        #print(large_friendList)
+        #print("_____________________")
+        # |Q(visibility = "SERVERONLY",author_obj = current_obj)|Q(visibility = "FOAF",author_obj__in = large_friendList)|Q(visibility = "PRIVATE",author_obj = current_obj)|Q(visibility = "PRIVATE",visibility__contains = current_obj)
+        #queryset = Posts.objects.all().filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
         author_obj = User.objects.get(id = author_id)
+        if same_server:
+            queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "SERVERONLY")|Q(author_obj = current_obj)|Q(visibility = "FOAF",author_obj__in = large_friendList)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = friendList)|Q(visibility = "PRIVATE",visibleTo__icontains = current_obj.id)).order_by("-published")
+        else:
+            queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(author_obj = current_obj)|Q(visibility = "FOAF",author_obj__in = large_friendList)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = friendList)|Q(visibility = "PRIVATE",visibleTo__icontains = current_obj.id)).order_by("-published")
+        #current_obj = request.user
+        
         #queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = True)|Q(visibleTo__icontains = current_obj.id)|Q(author_obj = current_obj)).order_by("-published")
-        queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "PUBLIC")|Q(author_obj = current_obj)).order_by("-published")
+        #queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "PUBLIC")|Q(author_obj = current_obj)).order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
         dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
         return Response(dict)
@@ -219,3 +355,12 @@ class ServerViewSet(viewsets.ModelViewSet):
     ]
     queryset = Server.objects.all().filter()
     serializer_class = ServerSerializer
+
+def normalize(str1, str2):
+    # normalize urls
+    if (str1[-1] != '/'):
+        str1 += '/'
+    if (str2[-1] != '/'):
+        str2 += '/'    
+    
+    return str1, str2
