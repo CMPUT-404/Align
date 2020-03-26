@@ -195,8 +195,9 @@ def get_posts(request,author_id):
         #https://cloud
         #print(userUrl[0:13])
         #print("http://cloud")
-        if userUrl[0:13] == "https://cloud":
+        if str(userUrl[0:13]) == "https://cloud":
             same_server = True
+        #print(str(userUrl[0:13]))
         #print("_________________")
         #print(userUrl)
         query1 = Following.objects.filter(receiver=userUrl, status=True)
