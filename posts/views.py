@@ -192,8 +192,8 @@ def get_posts(request,author_id):
         current_obj = user
         userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
         #http://cloud
-        print(userUrl[0:12])
-        print("http://cloud")
+        #print(userUrl[0:12])
+        #print("http://cloud")
         if userUrl[0:12] == "http://cloud":
             same_server = True
         #print("_________________")
