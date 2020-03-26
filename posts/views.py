@@ -107,7 +107,7 @@ def get_public_posts(request):
 
     response = {
         "query": "posts",
-        "count": len(serializer_class.data),
+        "count": len(all_posts),
         "size": None,
         "next": None,
         "previous": None,
@@ -135,8 +135,6 @@ def get_posts_author(request,author_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_posts_by_auth(request):
-    factory = APIRequestFactory()
-    requests = factory.get('/')
     if request.method == 'GET':
         # serializer_context = {
         #     'request': Request(requests),
@@ -209,8 +207,32 @@ def get_posts_by_auth(request):
         else:
             queryset = Posts.objects.all().filter(Q(author_obj = current_obj)|Q(visibility = "FOAF",author_obj__in = large_friendList)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = friendList)|Q(visibility = "PRIVATE",visibleTo__icontains = current_obj.id)).order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
-        dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
-        return Response(dict)
+
+        all_posts = serializer_class.data
+        servers = Server.objects.all()
+        server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
+        for server in server_serializer.data:
+            try:
+                domain = server["domain"]
+                url = "{}posts".format(domain)
+                response = requests.get(url=url)
+                data = response.json()
+                posts = data['posts']
+                if posts is None:
+                    raise Exception(data)
+                all_posts += posts
+            except Exception as e:
+                return Response(e.args, status=500)
+
+        response = {
+            "query": "posts",
+            "count": len(all_posts),
+            "size": None,
+            "next": None,
+            "previous": None,
+            "posts": all_posts
+        }
+        return Response(response)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
