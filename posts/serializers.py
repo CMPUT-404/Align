@@ -50,13 +50,13 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
             vis = validated_data.get('visible_to', Posts.visible_to) + "," + author_id
             '''
         post = Posts(
-            title=validated_data.get('title', Posts.title),
+            title=validated_data.get('title', None),
             author_obj=validated_data.get('author_obj', None),
             description=validated_data.get('description', ""),
             content=validated_data.get('content', ""),
-            visibility=validated_data.get('visibilities', "PUBLIC"),
-            visibleTo=validated_data.get('visibleTo', None),
-            image=validated_data.get('image', None),
+            visibility=validated_data.get('visibility', "PUBLIC"),
+            visibleTo=validated_data.get('visibleTo', ""),
+            image=validated_data.get('image', ""),
             published=str(datetime.datetime.now())
         )
         request = self.context.get('request')
