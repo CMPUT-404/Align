@@ -192,10 +192,12 @@ def get_posts(request,author_id):
         current_obj = user
         userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
         #http://cloud
-        #print(userUrl[0:12])
+        #https://cloud
+        #print(userUrl[0:13])
         #print("http://cloud")
-        if userUrl[0:12] == "http://cloud":
+        if str(userUrl[0:13]) == "https://cloud":
             same_server = True
+        #print(str(userUrl[0:13]))
         #print("_________________")
         #print(userUrl)
         query1 = Following.objects.filter(receiver=userUrl, status=True)
