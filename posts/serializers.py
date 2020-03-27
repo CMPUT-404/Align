@@ -50,7 +50,7 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
             vis = validated_data.get('visible_to', Posts.visible_to) + "," + author_id
             '''
         post = Posts(
-            title=validated_data.get('title', None),
+            title=validated_data.get('title', ""),
             author_obj=validated_data.get('author_obj', None),
             description=validated_data.get('description', ""),
             content=validated_data.get('content', ""),
