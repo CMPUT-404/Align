@@ -20,7 +20,7 @@ class AccountTests(APITestCase):
         """
         get /users without authenticated
         """
-        response = self.client.get('/users/')
+        response = self.client.get('/author/')
         pprint.pprint(response.data)
         self.assertNotEqual(response.status_code, status.HTTP_200_OK)
 
@@ -33,7 +33,7 @@ class AccountTests(APITestCase):
     # GET /users/validate
     def test_user(self):
         self.assertEqual(User.objects.count(), 0)
-        url = "/users/register"
+        url = "/author/register"
         data = {'username': 'test', 'password': 'securePassword', 'email': 'test@test.com'}
         response = self.client.post(url, data, format='json')
         print("###register###")
@@ -41,7 +41,7 @@ class AccountTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.count(), 1)
 
-        url = "/users/login"
+        url = "/author/login"
         data = {'username': 'test', 'password': 'securePassword'}
         response = self.client.post(url, data, format='json')
         print("###login###")
@@ -51,38 +51,35 @@ class AccountTests(APITestCase):
         token = response.data['token']
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token)
 
-        url = "/users/"
+        url = "/author/"
         user_url = response.data['user']['url']
         response = self.client.get(url)
-        print("###/users/###")
+        print("###/author/###")
         pprint.pprint(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(response.data) == 1)
 
         url = user_url
         response = self.client.get(url)
-        print("###GET /users/<id>###")
+        print("###GET /author/<id>###")
         pprint.pprint(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data["host"] == "127.0.0.1")
         self.assertTrue(response.data["username"] == "test")
         self.assertTrue(response.data["bio"] == "")
 
         url = user_url
         data = {'username': 'new_user_name', 'bio': "what's up"}
         response = self.client.patch(url, data, format='json')
-        print("###PATCH /users/<id>###")
+        print("###PATCH /author/<id>###")
         pprint.pprint(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data["host"] == "127.0.0.1")
         self.assertTrue(response.data["username"] == 'new_user_name')
         self.assertTrue(response.data["bio"] == "what's up")
 
-        url = "/users/validate"
+        url = "/author/validate"
         response = self.client.get(url)
-        print("###GET /users/validate###")
+        print("###GET /author/validate###")
         pprint.pprint(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data['user']["host"] == "127.0.0.1")
         self.assertTrue(response.data['user']["username"] == 'new_user_name')
         self.assertTrue(response.data['user']["bio"] == "what's up")
