@@ -14,6 +14,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 
+from friends.models import Following
+from friends.views import normalize
 from users.serializers import UserSerializer, GroupSerializer
 
 User = get_user_model()
@@ -99,6 +101,42 @@ class ValidateView(APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
         return Response(status=200, data={'user': UserSerializer(user, context={'request': request}).data})
+
+
+# Get user by username
+class SearchUserView(APIView):
+    permission_classes = [
+        permissions.AllowAny
+    ]
+
+    def get(self, request, *args, **kwargs):
+        a = kwargs['pk']
+        try:
+            queryset = User.objects.get(username=a)
+        except Exception:
+            return Response("Username {} does not match any users".format(a), status=400)
+
+        serializer = UserSerializer(instance=queryset, context={'request': request})
+
+        # get friends from following model
+        userUrl, _ = normalize(UserSerializer(queryset, context={'request': request}).data["url"], '/')
+        query1 = Following.objects.filter(receiver=userUrl, status=True)
+        query2 = Following.objects.filter(sender=userUrl, status=True)
+
+        friendList = []
+
+        # add to friend list
+        for friend in query1:
+            friendList.append(friend.sender)
+
+        for friend in query2:
+            friendList.append(friend.receiver)
+
+        data = dict(serializer.data)
+
+        data["friends"] = friendList
+
+        return Response(data)
 
 ''' # ignore me please
 from rest_framework.authtoken.views import ObtainAuthToken

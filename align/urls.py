@@ -48,4 +48,5 @@ urlpatterns = [
     url(r'^author/login$', user_views.LoginView.as_view()),
     url(r'^author/register$', user_views.RegisterView.as_view()),
     url(r'^author/validate$', user_views.ValidateView.as_view()),
+    url(r'^author/search/(?P<pk>[a-zA-Z0-9._@+-]+)/$', user_views.SearchUserView.as_view())
 ]

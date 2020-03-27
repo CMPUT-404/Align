@@ -83,3 +83,14 @@ class AccountTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['user']["username"] == 'new_user_name')
         self.assertTrue(response.data['user']["bio"] == "what's up")
+
+        url = "/author/search/new_user_name/"
+        response = self.client.get(url)
+        print("###GET /author/search/<username>###")
+        pprint.pprint(response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["username"] == 'new_user_name')
+        self.assertTrue(response.data["bio"] == "what's up")
+        url = "/author/search/notExist/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
