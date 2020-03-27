@@ -3,6 +3,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from posts.models import Posts
 import datetime
+from users.serializers import UserSerializer
 User = get_user_model()
 
 class CommentsSerializer(serializers.Serializer):
@@ -31,7 +32,7 @@ class CommentsSerializer(serializers.Serializer):
 
     def get_author(self,obj):
         user = User.objects.get(id = obj.auth)
-        return {"id": user.id, "host": user.host, "displayName": user.displayName}
+        return UserSerializer(instance=user, context=self.context).data
     def get_contentType(self,obj):
         return ("text/plain")
 
@@ -55,7 +56,7 @@ class CommentsPostSerializer(serializers.Serializer):
     def get_author(self,obj):
         user = User.objects.get(id = obj.auth)
         user_id = str(user.id)
-        return {"id": user.id, "url":"https://cloud-align-server.herokuapp.com/author/" + user_id +"/","host": user.host, "displayName": user.displayName,"github":user.github}
+        return {"id": user.host + "author/" + user_id +"/", "url":user.host + "author/" + user_id +"/","host": user.host, "displayName": user.displayName,"github":user.github}
     def get_contentType(self,obj):
         return ("text/plain")
 
