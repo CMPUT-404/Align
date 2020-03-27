@@ -1,3 +1,4 @@
+import requests
 from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import render
 from django.http import HttpResponse, Http404
@@ -14,6 +15,8 @@ from rest_framework.decorators import action, api_view, permission_classes
 from friends.serializers import FollowingSerializer
 from rest_framework.authtoken.models import Token
 
+from posts.models import Server
+from posts.serializers import ServerSerializer
 from users.serializers import UserSerializer
 
 User = get_user_model()
@@ -369,26 +372,49 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         a = kwargs['pk']
-        queryset = User.objects.get(id=a)
-        serializer = UserSerializer(instance=queryset, context={'request': request})
+        host = request.query_params.get('host', None)
+        post = None
 
-        # get friends from following model
-        userUrl, _ = normalize(UserSerializer(queryset, context={'request': request}).data["url"], '/')
-        query1 = Following.objects.filter(receiver=userUrl, status=True)
-        query2 = Following.objects.filter(sender=userUrl, status=True)
+        if host:
+            find = False
+            servers = Server.objects.all()
+            server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
+            for server in server_serializer.data:
+                if host == server["domain"]:
+                    find = True
+                    break
+            if find:
+                try:
+                    url = '{}author/{}'.format(host, a)
+                    response = requests.get(url=url)
+                    data = response.json()
+                    if not data:
+                        raise Exception("Cannot get the user with id = {}".format(a))
+                except Exception as e:
+                    return Response(e.args, status=500)
+            else:
+                return Response("The host {} is not in the server list, the access is denied".format(host), status=400)
+        else:
+            queryset = User.objects.get(id=a)
+            serializer = UserSerializer(instance=queryset, context={'request': request})
 
-        friendList = []
+            # get friends from following model
+            userUrl, _ = normalize(UserSerializer(queryset, context={'request': request}).data["url"], '/')
+            query1 = Following.objects.filter(receiver=userUrl, status=True)
+            query2 = Following.objects.filter(sender=userUrl, status=True)
 
-        # add to friend list
-        for friend in query1:
-            friendList.append(friend.sender)
+            friendList = []
 
-        for friend in query2:
-            friendList.append(friend.receiver)
+            # add to friend list
+            for friend in query1:
+                friendList.append(friend.sender)
 
-        data = dict(serializer.data)
+            for friend in query2:
+                friendList.append(friend.receiver)
 
-        data["friends"] = friendList
+            data = dict(serializer.data)
+
+            data["friends"] = friendList
 
         return Response(data)
 
