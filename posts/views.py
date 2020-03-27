@@ -123,8 +123,6 @@ def get_public_posts(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_posts_author(request,author_id):
-    factory = APIRequestFactory()
-    requests = factory.get('/')
     if request.method == 'GET':
         author_obj = User.objects.get(id = author_id)
         queryset = Posts.objects.all().filter(author_obj = author_obj).order_by("-published")
