@@ -97,13 +97,16 @@ def get_public_posts(request):
             domain = server["domain"]
             url = "{}posts".format(domain)
             response = requests.get(url=url)
-            data = response.json()
-            posts = data['posts']
-            if posts is None:
-                raise Exception(data)
-            all_posts += posts
+            if 200 <= response.status_code <= 299:
+                data = response.json()
+                posts = data['posts']
+                if posts is None:
+                    raise Exception(data)
+                all_posts += posts
         except Exception as e:
-            return Response(e.args, status=500)
+            # return Response(e.args, status=500)
+            print("[ERROR] NETWORK ERROR WHEN GET POSTS FROM", url, e.args)
+            pass
 
     response = {
         "query": "posts",
@@ -216,13 +219,16 @@ def get_posts_by_auth(request):
                 domain = server["domain"]
                 url = "{}posts".format(domain)
                 response = requests.get(url=url)
-                data = response.json()
-                posts = data['posts']
-                if posts is None:
-                    raise Exception(data)
-                all_posts += posts
+                if 200 <= response.status_code <= 299:
+                    data = response.json()
+                    posts = data['posts']
+                    if posts is None:
+                        raise Exception(data)
+                    all_posts += posts
             except Exception as e:
-                return Response(e.args, status=500)
+                print("[ERROR] NETWORK ERROR WHEN GET POSTS FROM", url, e.args)
+                # return Response(e.args, status=500)
+                pass
 
         response = {
             "query": "posts",
