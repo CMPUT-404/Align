@@ -126,12 +126,9 @@ def get_posts_author(request,author_id):
     factory = APIRequestFactory()
     requests = factory.get('/')
     if request.method == 'GET':
-        serializer_context = {
-            'request': Request(requests),
-        }
         author_obj = User.objects.get(id = author_id)
         queryset = Posts.objects.all().filter(author_obj = author_obj).order_by("-published")
-        serializer_class = PostsSerializer(instance=queryset, context= serializer_context, many=True)
+        serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
         dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
         return Response(dict)
 # author/posts
@@ -139,9 +136,6 @@ def get_posts_author(request,author_id):
 @permission_classes([IsAuthenticated])
 def get_posts_by_auth(request):
     if request.method == 'GET':
-        # serializer_context = {
-        #     'request': Request(requests),
-        # }
         # find all the user who has the friends of the current user
         same_server = False
         user = request.user
