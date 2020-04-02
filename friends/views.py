@@ -1,19 +1,14 @@
 import requests
 from django.contrib.auth.models import AnonymousUser
-from django.shortcuts import render
-from django.http import HttpResponse, Http404
 
 # Create your views here.
 from django.contrib.auth import get_user_model
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.views import APIView
 
 from friends.models import Following
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, permissions
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from friends.serializers import FollowingSerializer
-from rest_framework.authtoken.models import Token
 
 from posts.models import Server
 from posts.serializers import ServerSerializer
@@ -21,14 +16,18 @@ from users.serializers import UserSerializer
 
 User = get_user_model()
 
+class FollowingPermissionSet(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        # everyone can create 
+        return (view.action == 'create')
+
 
 class FollowingViewSet(viewsets.ModelViewSet):
     queryset = Following.objects.all()
     serializer_class = FollowingSerializer
     # all apis in following need perms
-    permission_classes = [
-        permissions.IsAuthenticated
-    ]
+    permission_classes = [FollowingPermissionSet | permissions.IsAuthenticated]
 
 
 
@@ -41,7 +40,8 @@ class FollowingViewSet(viewsets.ModelViewSet):
             # get data necessary
             requestInfo = request.data
             senderUrl, receiverUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
-    
+            senderHost, receiverHost = normalize(requestInfo["author"]["host"], requestInfo["friend"]["host"])
+            
             senderUser = get_user_by_url(senderUrl)
             receiverUser = get_user_by_url(receiverUrl)
             
@@ -62,6 +62,34 @@ class FollowingViewSet(viewsets.ModelViewSet):
             response["error"] = "You cannot follow yourself!"
             return Response(response, status=400)
     
+        # checkhost
+        
+        # sent from someone we don't trust
+        if ((senderHost != getHost()) or (Server.objects.filter(domain=senderHost, status=True).exists())):
+            response["error"] = "Sender host is not trusted: {}".format(senderHost)
+            return Response(response, status=400)
+        
+        
+        # receiver host is not ours, send to other server
+        if (receiverHost != getHost()):
+            if (Server.objects.filter(domain=receiverHost, status=True).exists()):
+                # send to other server
+                url = "{}friendrequest/ ".format(receiverHost)
+                serverResponse = requests.post(url=url, data=requestInfo)  # TODO: should data be json?
+                try:
+                    jsonResponse = serverResponse.json()
+                    if (not jsonResponse["success"]):
+                        response["error"] = "The foreign server responded: {}".format(serverResponse.text)
+                        return Response(response, status=400)
+                except:
+                    response["error"] = "The foreign server responded: {}".format(serverResponse.text)
+                    return Response(response, status=400)
+                
+            else:
+                response["error"] = "Receiver host is not a trusted server: {}".format(receiverHost)
+                return Response(response, status=400)
+            
+        # other servers response went well
         # serialize and check for errors
         serializer = FollowingSerializer(data=data, context={'request': request})
         if serializer.is_valid():
@@ -436,19 +464,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
                 
             # get friends from following model
             userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-            query1 = Following.objects.filter(receiver=userUrl, status=True)
-            query2 = Following.objects.filter(sender=userUrl, status=True)
-
-            friendList = []
-
-            # add to friend list
-            for friend in query1:
-                friendList.append(friend.sender)
-
-            for friend in query2:
-                friendList.append(friend.receiver)
-
-            response["authors"] = friendList
+            response["authors"] = friendList(userUrl)
             return Response(response, status=200)
 
 
@@ -466,15 +482,14 @@ class AuthorViewSet(viewsets.ModelViewSet):
             try:
                 toCheck = request.data["authors"]
                 userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-                friendList = []
+                ListofFriends = friendList(userUrl)
+                isFriend = []
                 # check if friend is a user's friend
                 for friend in toCheck:
-                    friendUrl, _  = normalize(friend, '/')
-                    query1 = Following.objects.filter(receiver=userUrl, sender=friendUrl, status=True).first()
-                    query2 = Following.objects.filter(receiver=friendUrl, sender=userUrl, status=True).first()
-                    if ((query1 != None) or (query2 != None)):
-                        friendList.append(friend)
-                response["authors"] = friendList
+                    friendUrl, _ = normalize(friend, '/')
+                    if (friendUrl in ListofFriends):
+                        isFriend.append(friend)
+                response["authors"] = isFriend
                 return Response(response, status=200)
             
             except:
@@ -537,56 +552,69 @@ class AuthorViewSet(viewsets.ModelViewSet):
         # URL: /author/{author1_id}/friends/{author2_id}
 
         response = {"query": "friends", "friends": False, "authors": []}
-        try:
-            # check if they are friends
-            user = User.objects.get(id=pk)
-            userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-            query1 = Following.objects.filter(receiver=userUrl, status=True)
-            query2 = Following.objects.filter(sender=userUrl, status=True)
-            
-            for friend in query1:
-                if (get_url(friend.sender) == str(sk)):
-                    response["friends"] = True
-                    response["authors"] = [userUrl, friend.sender]
-                    return Response(response, status=200)
-            
-            for friend in query2:
-                if (get_url(friend.receiver) == str(sk)):
-                    response["friends"] = True
-                    response["authors"] = [userUrl, friend.receiver]
-                    return Response(response, status=200)
 
-            return Response(response, status=200)
-        except:
-            try:
-                user = User.objects.get(id=sk)
-                userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-                query1 = Following.objects.filter(receiver=userUrl, status=True)
-                query2 = Following.objects.filter(sender=userUrl, status=True)
-    
-                for friend in query1:
-                    if (get_url(friend.sender) == str(pk)):
-                        response["friends"] = True
-                        response["authors"] = [userUrl, friend.sender]
-                        return Response(response, status=200)
-                        
-                for friend in query2:
-                    if (get_url(friend.receiver) == str(pk)):
+        # check if they are friends
+        user1 = User.objects.get(id=pk)
+        user2 = User.objects.get(id=sk)
+        user = user1 if (user1!= None) else user2
+        friendID = sk if (user1 != None) else pk
+        
+        # users aren't from server
+        if (user == None):
+            response["error"] = "Neither of the authors are from this server"
+            return Response(response, status=400)
+        
+        
+        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')     
+        query1 = Following.objects.filter(receiver=userUrl, status=True)
+        query2 = Following.objects.filter(sender=userUrl, status=True)
+            
+        # check locally first
+        for friend in query1:
+            if (get_id(friend.sender) == str(friendID)):
+                response["friends"] = True
+                response["authors"] = [userUrl, friend.sender]
+                return Response(response, status=200)
+            
+        for friend in query2:
+            if (get_id(friend.receiver) == str(friendID)):
+                response["friends"] = True
+                response["authors"] = [userUrl, friend.receiver]
+                return Response(response, status=200)
+
+        # check other servers
+        query = Following.objects.filter(sender=userUrl)
+        for friend in query:
+            if ((friend.status != True) and (get_id(friend.receiver) == str(friendID))):
+                hostUrl = get_host(friend.receiver)
+                if (hostUrl == ''):
+                    break
+                hostUrl, _ = normalize(hostUrl, '/')
+                if (hostUrl == getHost()):
+                    break
+                url = "{}author/{}/friends/{}/".format(hostUrl, str(friendID), get_id(userUrl))
+                serverResponse = requests.get(url)
+                try:
+                    jsonResponse = serverResponse.json()
+                    if (jsonResponse["friends"]):
                         response["friends"] = True
                         response["authors"] = [userUrl, friend.receiver]
                         return Response(response, status=200)
-                
-                return Response(response, status=200)
-            except:
-                response["error"] = "Neither of the authors are from this server"
-                return Response(response, status=400)
-                
+                    else:
+                        break
+                except:
+                    break
+        
+        return Response(response, status=200)
+
+
+
 
 
     @action(methods=['get'], detail=True, url_path='friendrequests', url_name='requestList')
     def request_List(self, request, pk=None):
 
-        # get reuest list of author
+        # get request list of author
         # URL: /author/{author_id}/friendrequests
         response = {"query": "requests", "requests": []}
         
@@ -615,6 +643,11 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
 
 
+
+def getHost():
+    return "https://cloud-align-server.herokuapp.com/"
+
+
 def normalize(str1, str2):
     # normalize urls
     if (str1[-1] != '/'):
@@ -632,10 +665,57 @@ def get_user_by_url(url):
     except:
         return None
     
-def get_url(string):
+def get_id(string):
     try:
         return str(string).split('/')[-2]
     except:
         return ''
     
+def get_host(string):
+    try:
+        return '/'.join(string.split('/')[:-3])
+    except:
+        ''
+def friendList(userUrl):  
     
+    query1 = Following.objects.filter(receiver=userUrl, status=True)
+    query2 = Following.objects.filter(sender=userUrl, status=True)
+
+    friendList = []
+
+    # add to friend list
+    
+    # check locally
+    for friend in query1:
+        friendList.append(friend.sender)
+
+    for friend in query2:
+        friendList.append(friend.receiver)
+        
+    # check other servers    
+    query = Following.objects.filter(sender=userUrl)
+    for item in query:
+        if (item.status != True):
+            hostUrl = get_host(item.receiver)
+            if (hostUrl == ''):
+                continue
+            hostUrl, _ = normalize(hostUrl, '/')
+            if (hostUrl == getHost()):
+                    continue
+            url = "{}author/{}/friends/{}/".format(hostUrl, get_id(item.receiver), get_id(userUrl))
+            serverResponse = requests.get(url)
+            try:
+                jsonResponse = serverResponse.json()
+                if (jsonResponse["friends"]):
+                    friendList.append(item.receiver)
+            except:
+                continue
+        
+        
+    return friendList    
+
+
+
+
+
+
