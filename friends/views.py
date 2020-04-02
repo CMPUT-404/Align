@@ -649,7 +649,6 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
 
 def getHost():
-    #return "http://localhost:8000/"
     return "https://cloud-align-server.herokuapp.com/"
 
 
@@ -701,12 +700,9 @@ def friendList(userUrl):
     query = Following.objects.filter(sender=userUrl)
     for item in query:
         if (item.status != True):
-            hostUrl = get_host(item.receiver)
-            if ((hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
+            hostUrl, _ = normalize(get_host(item.receiver), '/')
+            if ((hostUrl == getHost()) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
                 continue
-            hostUrl, _ = normalize(hostUrl, '/')
-            if (hostUrl == getHost()):
-                    continue
             url = "{}author/{}/friends/{}/".format(hostUrl, get_id(item.receiver), get_id(userUrl))
             serverResponse = requests.get(url)
             try:
