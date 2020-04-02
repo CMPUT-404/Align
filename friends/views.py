@@ -48,7 +48,7 @@ class FollowingViewSet(viewsets.ModelViewSet):
             if ((senderUser == None) and (receiverUser == None)):
                 # none of the users are from our server ignore
                 response["error"] = "None of the users are from our server"
-                return Response(response)
+                return Response(response, status=400)
             
             # else, prepare data for serializer
             data = {"receiver": receiverUrl, "sender": senderUrl}
@@ -74,12 +74,12 @@ class FollowingViewSet(viewsets.ModelViewSet):
         if (receiverHost != getHost()):
             if (Server.objects.filter(domain=receiverHost, status=True).exists()):
                 # send to other server
-                url = "{}friendrequest/ ".format(receiverHost)
-                serverResponse = requests.post(url=url, data=requestInfo)  # TODO: should data be json?
+                url = "{}friendrequest/".format(receiverHost)                    
+                serverResponse = requests.post(url=url, json=requestInfo)
                 try:
                     jsonResponse = serverResponse.json()
                     if (not jsonResponse["success"]):
-                        response["error"] = "The foreign server responded: {}".format(serverResponse.text)
+                        response["error"] = "The foreign server responded: {}".format(jsonResponse)
                         return Response(response, status=400)
                 except:
                     response["error"] = "The foreign server responded: {}".format(serverResponse.text)
@@ -89,8 +89,8 @@ class FollowingViewSet(viewsets.ModelViewSet):
                 response["error"] = "Receiver host is not a trusted server: {}".format(receiverHost)
                 return Response(response, status=400)
             
-        # other servers response went well
-        # serialize and check for errors
+        # other servers response went well if necessary
+        # serialize and check for errors        
         serializer = FollowingSerializer(data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
@@ -554,8 +554,14 @@ class AuthorViewSet(viewsets.ModelViewSet):
         response = {"query": "friends", "friends": False, "authors": []}
 
         # check if they are friends
-        user1 = User.objects.get(id=pk)
-        user2 = User.objects.get(id=sk)
+        try:
+            user1 = User.objects.get(id=pk)
+        except:
+            user1 = None
+        try:
+            user2 = User.objects.get(id=sk)
+        except:
+            user2 = None
         user = user1 if (user1!= None) else user2
         friendID = sk if (user1 != None) else pk
         
@@ -565,7 +571,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
             return Response(response, status=400)
         
         
-        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')     
+        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')            
         query1 = Following.objects.filter(receiver=userUrl, status=True)
         query2 = Following.objects.filter(sender=userUrl, status=True)
             
@@ -584,13 +590,11 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
         # check other servers
         query = Following.objects.filter(sender=userUrl)
+        
         for friend in query:
             if ((friend.status != True) and (get_id(friend.receiver) == str(friendID))):
-                hostUrl = get_host(friend.receiver)
-                if (hostUrl == ''):
-                    break
-                hostUrl, _ = normalize(hostUrl, '/')
-                if (hostUrl == getHost()):
+                hostUrl, _ = normalize(get_host(friend.receiver), '/')
+                if ((hostUrl == getHost()) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
                     break
                 url = "{}author/{}/friends/{}/".format(hostUrl, str(friendID), get_id(userUrl))
                 serverResponse = requests.get(url)
@@ -645,6 +649,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
 
 def getHost():
+    #return "http://localhost:8000/"
     return "https://cloud-align-server.herokuapp.com/"
 
 
@@ -697,7 +702,7 @@ def friendList(userUrl):
     for item in query:
         if (item.status != True):
             hostUrl = get_host(item.receiver)
-            if (hostUrl == ''):
+            if ((hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
                 continue
             hostUrl, _ = normalize(hostUrl, '/')
             if (hostUrl == getHost()):
