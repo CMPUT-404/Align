@@ -50,31 +50,35 @@ def post_comments(request,post_id):
             'request': Request(requests)
         }
         try:
-            a = request.data['auth']
+            a = request.data['comment']
         except:
             HttpResponse.status_code = 400
-            return HttpResponse("the body u provided does not contain a 'auth' tag or the data with 'auth' is empty")
-        try:
-            b = request.data['comment']
-        except:
-            HttpResponse.status_code = 400
-            return HttpResponse("the body u provided does not contain a 'comment' tag or the data with 'comment' is empty")
+            return HttpResponse("the body u provided does not contain a 'comment' tag or the data with 'comment' is invalid")
         try:
             post = Posts.objects.get(id = post_id)
         except:
             HttpResponse.status_code = 400
             return HttpResponse("the post_id u provided is invalid or there is no such posts with this id")
+        a = request.data['comment']
+        print(a)
         try:
-            author_obj = User.objects.get(id = request.data['auth'])
+            a = request.data['comment']
+        
+            b = a['author']
+            CommentsCreateSerializer.create(b,a,post_id)
+            response = {
+	"query": "addComment",
+        "success":True,
+        "message":"Comment Added"
+}
+            return Response(response, status=200)
         except:
-            HttpResponse.status_code = 400
-            return HttpResponse("the auth u provided is invalid or there is no such user with this id")
-        try:
-            CommentsCreateSerializer.create(request.data['auth'],request.data['comment'],post_id)
-            return HttpResponse("the comment has been successfully added")
-        except:
-            HttpResponse.status_code = 406
-            return HttpResponse("the comment has not been added")
+            response = {
+	"query": "addComment",
+        "success":False,
+        "message":"Comment Added"
+}
+            return Response(response, status=406)
     else:
         HttpResponse.status_code = 400
         return HttpResponse("this specific http is not allowed for this api")

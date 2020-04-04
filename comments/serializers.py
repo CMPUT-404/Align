@@ -8,34 +8,25 @@ User = get_user_model()
 
 class CommentsSerializer(serializers.Serializer):
     id = serializers.SerializerMethodField()
-    auth = serializers.SerializerMethodField()
-    root = serializers.SerializerMethodField()
-    comment = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
+    comment = serializers.SerializerMethodField()
     contentType = serializers.SerializerMethodField()
     published = serializers.SerializerMethodField()
 
     class Meta:
         model = Comments
-        fields = ['id','auth','root', 'comment','published','author']
+        fields = ['id','contentType', 'comment','published','author']
 
     def get_id(self,obj):
         return (obj.id)
-    def get_auth(self,obj):
-        return (obj.auth)
-    def get_root(self,obj):
-        return (obj.root.id)
     def get_comment(self,obj):
         return (obj.comment)
     def get_published(self,obj):
         return (obj.published)
-
-    def get_author(self,obj):
-        user = User.objects.get(id = obj.auth)
-        return UserSerializer(instance=user, context=self.context).data
     def get_contentType(self,obj):
-        return ("text/plain")
-
+        return (obj.content)
+    def get_author(self,obj):
+        return {"id": obj.auth_id, "host": obj.host, "displayName": obj.name}
 class CommentsPostSerializer(serializers.Serializer):
     id = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
@@ -53,21 +44,24 @@ class CommentsPostSerializer(serializers.Serializer):
         return (obj.comment)
     def get_published(self,obj):
         return (obj.published)
-    def get_author(self,obj):
-        user = User.objects.get(id = obj.auth)
-        user_id = str(user.id)
-        return {"id": user.host + "author/" + user_id +"/", "url":user.host + "author/" + user_id +"/","host": user.host, "displayName": user.displayName,"github":user.github}
     def get_contentType(self,obj):
-        return ("text/plain")
+        return (obj.content)
+    def get_author(self,obj):
+        return {"id": obj.auth_id, "url":obj.url,"github":obj.github,"host": obj.host, "displayName": obj.name}
 
 class CommentsCreateSerializer(serializers.Serializer):
     @classmethod
-    def create(self, a,b,post_id):
+    def create(self,b, a,post_id):
         post = Posts.objects.get(id = post_id)
         comment = Comments(
-            auth = a,
+            auth_id = b.get('id', ""),
+	        url = b.get('url', ""),
+	        host = b.get('host', ""),
+	        name = b.get('displayName', ""),
+	        github = b.get('github', ""),
+            content = a.get('contentType',""),
             root = post,
-            comment = b,
+            comment = a.get('comment',""),
             published = str(datetime.datetime.now()),
             )
         comment.save()
@@ -82,4 +76,4 @@ class CommentsCreateSerializer(serializers.Serializer):
             return false
     class Meta:
         model = Comments
-        fields = ['auth','root','comment','published']
+        fields = ['auth_id','url','host','name','github','root','comment','published']
