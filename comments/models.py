@@ -8,8 +8,8 @@ import uuid
 # Create your models here.
 class Comments(models.Model):
     # it has a title
-	id = models.AutoField(primary_key=True)
-	#id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+	#id = models.AutoField(primary_key=True)
+	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 	# new push test for heroku
 	#auth = models.TextField()
 	auth_id = models.TextField(blank=True, max_length=300)
@@ -24,3 +24,4 @@ class Comments(models.Model):
 	#comment = models.TextField()
 	published = models.DateTimeField(blank = True,default=timezone.now)
 	#est = models.TextField(blank = True,default="test")
+	
