@@ -66,7 +66,7 @@ class FollowingViewSet(viewsets.ModelViewSet):
         # checkhost
         
         # sent from someone we don't trust
-        if ((getHost() not in senderHost) or (Server.objects.filter(domain=senderHost, status=True).exists())):
+        if ((getHost() not in senderHost) and (not Server.objects.filter(domain=senderHost, status=True).exists())):
             response["error"] = "Sender host is not trusted: {}".format(senderHost)
             return Response(response, status=400)
         
