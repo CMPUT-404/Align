@@ -17,9 +17,8 @@ User = get_user_model()
 
 class PostsSerializer(serializers.HyperlinkedModelSerializer):
     author = serializers.SerializerMethodField()
-    contentType = serializers.SerializerMethodField()
-    unlisted = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
     #visible = serializers.SerializerMethodField()
     class Meta:
         model = Posts
@@ -28,11 +27,9 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
     def get_author(self,obj):
         return UserSerializer(instance=obj.author_obj, context=self.context).data
 
-    def get_contentType(self,obj):
-        return ("text/plain")
+    def get_categories(self,obj):
+        return ["web","tutorial"]
     
-    def get_unlisted(self,obj):
-        return (False)
 
     def get_comments(self,obj):
         try:
@@ -56,8 +53,10 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
             content=validated_data.get('content', ""),
             visibility=validated_data.get('visibility', "PUBLIC"),
             visibleTo=validated_data.get('visibleTo', ""),
+            contentType = validated_data.get('contentType', ""),
             image=validated_data.get('image', ""),
-            published=str(datetime.datetime.now())
+            published=str(datetime.datetime.now()),
+            unlisted = validated_data.get('unlisted', False)
         )
         request = self.context.get('request')
         post.save()
