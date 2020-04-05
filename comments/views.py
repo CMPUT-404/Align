@@ -32,12 +32,7 @@ User = get_user_model()
 
 @api_view(['GET', 'POST'])
 def post_comments(request,post_id):
-    factory = APIRequestFactory()
-    request_s = factory.get('/')
     if request.method == 'GET':
-        serializer_context = {
-            'request': Request(request_s),
-        }
         try:
             post = Posts.objects.get(id = post_id)
         except:
@@ -49,9 +44,6 @@ def post_comments(request,post_id):
         dict = {"query":"comments","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"comments":serializer_class.data}
         return Response(dict)
     elif request.method == 'POST':
-        serializer_context = {
-            'request': Request(request_s)
-        }
         host = request.query_params.get('host', None)
         if host:
             find = False
@@ -63,18 +55,21 @@ def post_comments(request,post_id):
                     find = True
                     break
             if find:
-                try:
+             
                     # url = "{}posts/{}".format(host, postId)  #FIXME
                     url_format = '{}posts/' + post_id + '/comments'
                     url = url_format.format(host)  # XXX workaround
                     #print(request.data['comment'])
-                    body = request.data
+                    comment = request.data["comment"]
+                    print(comment)
+                    author = comment['author']
+                    comments = comment['comment']
+                    contentType = comment['contentType']
+                    body = {"comment":{"author":author,"comment":comments,"contentType":contentType}}
                     a = body['comment']
-                    print(body['comment'])
                     print(a['author'])
-                    print(post_id)
                     response = requests.post(url=url,data = body,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
-                    print(response.status_code)
+                    print(response.text)
                     if 200 <= response.status_code <= 299:
                         response = {
 	                            "query": "addComment",
@@ -84,10 +79,10 @@ def post_comments(request,post_id):
                         return Response(response)
                     else:
                         raise Exception("fail to create a foreign comment")
-                except Exception as e:
-                    return Response(e.args, status=500)
+            
             else:
                 return Response("The host {} is not in the server list, the access is denied".format(host), status=400)
+       
         try:
             a = request.data['comment']
         except:
@@ -97,8 +92,8 @@ def post_comments(request,post_id):
         try:
             b = a['author']
         except:
-            HttpResponse.status_code = 444
-            return HttpResponse("the body u provided its comment tag does not contain a 'auth' tag")
+            response = request.data
+            return Response(response, status=444)
         try:
             post = Posts.objects.get(id = post_id)
         except:
