@@ -90,37 +90,91 @@ class PostsViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 def get_public_posts(request):
     #queryset = Posts.objects.filter(visibility = True).order_by("-published")
-    queryset = Posts.objects.filter(visibility="PUBLIC").order_by("-published")
-    serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
-    all_posts = serializer_class.data
-    servers = Server.objects.all()
-    server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
-    for server in server_serializer.data:
-        try:
-            domain = server["domain"]
-            url = "{}posts".format(domain)
-            response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
-            print(response.status_code)
-            if 200 <= response.status_code <= 299:
-                data = response.json()
-                posts = data['posts']
+    try:
+        auth_header = request.META['HTTP_AUTHORIZATION']
+        print(auth_header)
+        encoded_credentials = auth_header.split(' ')[1]  # Removes "Basic " to isolate credentials
+        decoded_credentials = base64.b64decode(encoded_credentials).decode("utf-8").split(':')
+        username = decoded_credentials[0]
+        password = decoded_credentials[1]
+        if username == "remote@host.com":
+            if password == "yipu666":
+                queryset = Posts.objects.filter(visibility="PUBLIC").order_by("-published")
+                serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+                all_posts = serializer_class.data
+                response = {
+                    "query": "posts",
+                    "count": len(all_posts),
+                    "size": None,
+                    "next": None,
+                    "previous": None,
+                    "posts": all_posts
+                }
+                return Response(response)
+        queryset = Posts.objects.filter(visibility="PUBLIC").order_by("-published")
+        serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+        all_posts = serializer_class.data
+        servers = Server.objects.all()
+        server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
+        for server in server_serializer.data:
+            try:
+                domain = server["domain"]
+                url = "{}posts".format(domain)
+                response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+                print(response.status_code)
+                if 200 <= response.status_code <= 299:
+                    data = response.json()
+                    posts = data['posts']
                 if posts is None:
                     raise Exception(data)
                 all_posts += posts
-        except Exception as e:
-            # return Response(e.args, status=500)
-            print("[ERROR] NETWORK ERROR WHEN GET POSTS FROM", url, e.args)
-            pass
+            except Exception as e:
+                # return Response(e.args, status=500)
+                print("[ERROR] NETWORK ERROR WHEN GET POSTS FROM", url, e.args)
+                pass
 
-    response = {
+        response = {
         "query": "posts",
         "count": len(all_posts),
         "size": None,
         "next": None,
         "previous": None,
         "posts": all_posts
-    }
-    return Response(response)
+        }
+        return Response(response)
+        
+    except:
+        queryset = Posts.objects.filter(visibility="PUBLIC").order_by("-published")
+        serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
+        all_posts = serializer_class.data
+        servers = Server.objects.all()
+        server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
+        for server in server_serializer.data:
+            try:
+                domain = server["domain"]
+                url = "{}posts".format(domain)
+                response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+                print(response.status_code)
+                if 200 <= response.status_code <= 299:
+                    data = response.json()
+                    posts = data['posts']
+                if posts is None:
+                    raise Exception(data)
+                all_posts += posts
+            except Exception as e:
+                # return Response(e.args, status=500)
+                print("[ERROR] NETWORK ERROR WHEN GET POSTS FROM", url, e.args)
+                pass
+
+        response = {
+        "query": "posts",
+        "count": len(all_posts),
+        "size": None,
+        "next": None,
+        "previous": None,
+        "posts": all_posts
+        }
+        return Response(response)
 
 
 
