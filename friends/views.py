@@ -37,7 +37,7 @@ class FollowingViewSet(viewsets.ModelViewSet):
                     "message": "Friend request not sent"}
 
         try:
-            # get data necessary
+            # get data necessary                 
             requestInfo = request.data
             senderUrl, receiverUrl = normalize(requestInfo["author"]["id"], requestInfo["friend"]["id"])
             senderHost, receiverHost = normalize(requestInfo["author"]["host"], requestInfo["friend"]["host"])
@@ -53,6 +53,7 @@ class FollowingViewSet(viewsets.ModelViewSet):
             # else, prepare data for serializer
             data = {"receiver": receiverUrl, "sender": senderUrl}
             
+            
         except:
             response["error"] = "Unable to parse message as expected"
             return Response(response, status=400)
@@ -65,24 +66,24 @@ class FollowingViewSet(viewsets.ModelViewSet):
         # checkhost
         
         # sent from someone we don't trust
-        if ((senderHost != getHost()) or (Server.objects.filter(domain=senderHost, status=True).exists())):
+        if ((getHost() not in senderHost) or (Server.objects.filter(domain=senderHost, status=True).exists())):
             response["error"] = "Sender host is not trusted: {}".format(senderHost)
             return Response(response, status=400)
         
         
         # receiver host is not ours, send to other server
-        if (receiverHost != getHost()):
+        if (getHost() not in receiverHost):
             if (Server.objects.filter(domain=receiverHost, status=True).exists()):
                 # send to other server
                 url = "{}friendrequest/".format(receiverHost)                    
-                serverResponse = requests.post(url=url, json=requestInfo)
                 try:
+                    serverResponse = requests.post(url=url, json=requestInfo, timeout=20)
                     jsonResponse = serverResponse.json()
                     if (not jsonResponse["success"]):
                         response["error"] = "The foreign server responded: {}".format(jsonResponse)
                         return Response(response, status=400)
-                except:
-                    response["error"] = "The foreign server responded: {}".format(serverResponse.text)
+                except Exception as e:
+                    response["error"] = "Error while contacting other server: {}".format(e.args)
                     return Response(response, status=400)
                 
             else:
@@ -414,7 +415,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
             if find:
                 try:
                     url = '{}author/{}'.format(host, a)
-                    response = requests.get(url=url)
+                    response = requests.get(url=url, timeout=20)
                     data = response.json()
                     if not data:
                         raise Exception("Cannot get the user with id = {}".format(a))
@@ -542,76 +543,16 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
 
 
-
-
-
+    @action(methods=['get'], detail=True, url_path='friends/(?P<qk>[^/.]+)/author/(?P<sk>[^/.]+)', url_name='areFriends')
+    def are_friends_full_redirect(self, request, pk=None, qk=None, sk=None):
+        return are_friends(request, pk, sk=sk)
 
     @action(methods=['get'], detail=True, url_path='friends/(?P<sk>[^/.]+)', url_name='areFriends')
-    def are_friends(self, request, pk=None, sk=None):
+    def are_friends_redirect(self, request, pk=None, sk=None):
         # ask if 2 authors are friends
         # URL: /author/{author1_id}/friends/{author2_id}
 
-        response = {"query": "friends", "friends": False, "authors": []}
-
-        # check if they are friends
-        try:
-            user1 = User.objects.get(id=pk)
-        except:
-            user1 = None
-        try:
-            user2 = User.objects.get(id=sk)
-        except:
-            user2 = None
-        user = user1 if (user1!= None) else user2
-        friendID = sk if (user1 != None) else pk
-        
-        # users aren't from server
-        if (user == None):
-            response["error"] = "Neither of the authors are from this server"
-            return Response(response, status=400)
-        
-        
-        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')            
-        query1 = Following.objects.filter(receiver=userUrl, status=True)
-        query2 = Following.objects.filter(sender=userUrl, status=True)
-            
-        # check locally first
-        for friend in query1:
-            if (get_id(friend.sender) == str(friendID)):
-                response["friends"] = True
-                response["authors"] = [userUrl, friend.sender]
-                return Response(response, status=200)
-            
-        for friend in query2:
-            if (get_id(friend.receiver) == str(friendID)):
-                response["friends"] = True
-                response["authors"] = [userUrl, friend.receiver]
-                return Response(response, status=200)
-
-        # check other servers
-        query = Following.objects.filter(sender=userUrl)
-        
-        for friend in query:
-            if ((friend.status != True) and (get_id(friend.receiver) == str(friendID))):
-                hostUrl, _ = normalize(get_host(friend.receiver), '/')
-                if ((hostUrl == getHost()) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
-                    break
-                url = "{}author/{}/friends/{}/".format(hostUrl, str(friendID), get_id(userUrl))
-                serverResponse = requests.get(url)
-                try:
-                    jsonResponse = serverResponse.json()
-                    if (jsonResponse["friends"]):
-                        response["friends"] = True
-                        response["authors"] = [userUrl, friend.receiver]
-                        return Response(response, status=200)
-                    else:
-                        break
-                except:
-                    break
-        
-        return Response(response, status=200)
-
-
+        return are_friends(request, pk=pk, sk=sk)
 
 
 
@@ -648,8 +589,12 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
 
 
-def getHost():
-    return "https://cloud-align-server.herokuapp.com/"
+def getHost(request):
+    try:
+        return request.META["HTTP_HOST"]
+    except:
+        return ''
+    #return "https://cloud-align-server.herokuapp.com/"
 
 
 def normalize(str1, str2):
@@ -704,8 +649,8 @@ def friendList(userUrl):
             if ((hostUrl == getHost()) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
                 continue
             url = "{}author/{}/friends/{}/".format(hostUrl, get_id(item.receiver), get_id(userUrl))
-            serverResponse = requests.get(url)
             try:
+                serverResponse = requests.get(url, timeout=20)
                 jsonResponse = serverResponse.json()
                 if (jsonResponse["friends"]):
                     friendList.append(item.receiver)
@@ -716,6 +661,68 @@ def friendList(userUrl):
     return friendList    
 
 
+def are_friends(request, pk=None, sk=None):
+    # ask if 2 authors are friends
+    
+    response = {"query": "friends", "friends": False, "authors": []}
+
+    # check if they are friends
+    try:
+        user1 = User.objects.get(id=pk)
+    except:
+        user1 = None
+    try:
+        user2 = User.objects.get(id=sk)
+    except:
+        user2 = None
+    user = user1 if (user1!= None) else user2
+    friendID = sk if (user1 != None) else pk
+        
+    # users aren't from server
+    if (user == None):
+        response["error"] = "Neither of the authors are from this server"
+        return Response(response, status=400)
+        
+        
+    userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')            
+    query1 = Following.objects.filter(receiver=userUrl, status=True)
+    query2 = Following.objects.filter(sender=userUrl, status=True)
+            
+    # check locally first
+    for friend in query1:
+        if (get_id(friend.sender) == str(friendID)):
+            response["friends"] = True
+            response["authors"] = [userUrl, friend.sender]
+            return Response(response, status=200)
+            
+    for friend in query2:
+        if (get_id(friend.receiver) == str(friendID)):
+            response["friends"] = True
+            response["authors"] = [userUrl, friend.receiver]
+            return Response(response, status=200)
+
+    # check other servers
+    query = Following.objects.filter(sender=userUrl)
+        
+    for friend in query:
+        if ((friend.status != True) and (get_id(friend.receiver) == str(friendID))):
+            hostUrl, _ = normalize(get_host(friend.receiver), '/')
+            if ((hostUrl == getHost()) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
+                break
+            url = "{}author/{}/friends/{}/".format(hostUrl, str(friendID), get_id(userUrl))
+            try:
+                serverResponse = requests.get(url, timeout=20)
+                jsonResponse = serverResponse.json()
+                if (jsonResponse["friends"]):
+                    response["friends"] = True
+                    response["authors"] = [userUrl, friend.receiver]
+                    return Response(response, status=200)
+                else:
+                    break
+            except:
+                break
+        
+    return Response(response, status=200)
 
 
 
