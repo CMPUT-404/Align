@@ -40,7 +40,7 @@ def post_comments(request,post_id):
             return HttpResponse("the post_id u provided is invalid or there is no such posts with this id")
         post = Posts.objects.get(id = post_id)
         queryset = Comments.objects.all().filter(root = post).order_by("-published")
-        serializer_class = CommentsSerializer(instance=queryset, context= serializer_context, many=True)
+        serializer_class = CommentsSerializer(instance=queryset, many=True)
         dict = {"query":"comments","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"comments":serializer_class.data}
         return Response(dict)
     elif request.method == 'POST':
