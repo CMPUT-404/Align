@@ -60,7 +60,11 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
         )
         request = self.context.get('request')
         post.save()
-        post.source = "{}/posts/{}/".format(request.META['HTTP_ORIGIN'], post.id)
+        if "localhost" in request.META['HTTP_HOST']:
+            schema = "http"
+        else:
+            schema = "https"
+        post.source = "{}://{}/posts/{}/".format(schema, request.META['HTTP_HOST'], post.id)
         post.origin = "{}/posts/{}/".format(request.META['HTTP_ORIGIN'], post.id)
         post.save()
 
