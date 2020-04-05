@@ -60,15 +60,8 @@ def post_comments(request,post_id):
                     url_format = '{}posts/' + post_id + '/comments'
                     url = url_format.format(host)  # XXX workaround
                     #print(request.data['comment'])
-                    comment = request.data["comment"]
-                    print(comment)
-                    author = comment['author']
-                    comments = comment['comment']
-                    contentType = comment['contentType']
-                    body = {"comment":{"author":author,"comment":comments,"contentType":contentType}}
-                    a = body['comment']
-                    print(a['author'])
-                    response = requests.post(url=url,data = body,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+                    body = request.data
+                    response = requests.post(url=url,json = body,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
                     print(response.text)
                     if 200 <= response.status_code <= 299:
                         response = {
