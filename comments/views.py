@@ -93,11 +93,11 @@ def post_comments(request,post_id):
         except:
             HttpResponse.status_code = 400
             return HttpResponse("the body u provided does not contain a 'comment' tag or the data with 'comment' is invalid")
+        a = request.data['comment']
         try:
-            a = request.data['comment']
             b = a['author']
         except:
-            HttpResponse.status_code = 400
+            HttpResponse.status_code = 444
             return HttpResponse("the body u provided its comment tag does not contain a 'auth' tag")
         try:
             post = Posts.objects.get(id = post_id)
