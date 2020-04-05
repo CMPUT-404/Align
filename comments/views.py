@@ -52,79 +52,76 @@ def post_comments(request,post_id):
         serializer_context = {
             'request': Request(request_s)
         }
+        host = request.query_params.get('host', None)
+        if host:
+            find = False
+            servers = Server.objects.all()
+            server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
+            connect = host + "service/"
+            for server in server_serializer.data:
+                if host == server["domain"] or connect == server["domain"]:
+                    find = True
+                    break
+            if find:
+                try:
+                    # url = "{}posts/{}".format(host, postId)  #FIXME
+                    url_format = '{}posts/' + post_id + '/comments'
+                    url = url_format.format(host)  # XXX workaround
+                    #print(request.data['comment'])
+                    body = request.data
+                    a = body['comment']
+                    print(body['comment'])
+                    print(a['author'])
+                    print(post_id)
+                    response = requests.post(url=url,data = body,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+                    print(response.status_code)
+                    if 200 <= response.status_code <= 299:
+                        response = {
+	                            "query": "addComment",
+                                "success":True,
+                                "message":"Comment Added"
+                        }
+                        return Response(response)
+                    else:
+                        raise Exception("fail to create a foreign comment")
+                except Exception as e:
+                    return Response(e.args, status=500)
+            else:
+                return Response("The host {} is not in the server list, the access is denied".format(host), status=400)
         try:
-            host = request.query_params.get('host', None)
-            if host:
-                find = False
-                servers = Server.objects.all()
-                server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
-                connect = host + "service/"
-                for server in server_serializer.data:
-                    if host == server["domain"] or connect == server["domain"]:
-                        find = True
-                        break
-                if find:
-                    try:
-                        # url = "{}posts/{}".format(host, postId)  #FIXME
-                        url_format = '{}posts/' + post_id + '/comments'
-                        url = url_format.format(host)  # XXX workaround
-                        #print(request.data['comment'])
-                        body = request.data
-                        a = body['comment']
-                        print(body['comment'])
-                        print(a['author'])
-                        print(post_id)
-                        response = requests.post(url=url,data = body,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
-                        print(response.status_code)
-                        if 200 <= response.status_code <= 299:
-                            response = {
-	                                "query": "addComment",
-                                    "success":True,
-                                    "message":"Comment Added"
-                            }
-                            return Response(response)
-                        else:
-                            raise Exception("fail to create a foreign comment")
-                    except Exception as e:
-                        return Response(e.args, status=500)
-                else:
-                    return Response("The host {} is not in the server list, the access is denied".format(host), status=400)
-        except:
-            try:
-                a = request.data['comment']
-            except:
-                HttpResponse.status_code = 400
-                return HttpResponse("the body u provided does not contain a 'comment' tag or the data with 'comment' is invalid")
-            try:
-                a = request.data['comment']
-                b = a['author']
-            except:
-                HttpResponse.status_code = 400
-                return HttpResponse("the body u provided its comment tag does not contain a 'auth' tag")
-            try:
-                post = Posts.objects.get(id = post_id)
-            except:
-                HttpResponse.status_code = 400
-                return HttpResponse("the post_id u provided is invalid or there is no such posts with this id")
             a = request.data['comment']
-            try:
-                a = request.data['comment']
-        
-                b = a['author']
-                CommentsCreateSerializer.create(b,a,post_id)
-                response = {
+        except:
+            HttpResponse.status_code = 400
+            return HttpResponse("the body u provided does not contain a 'comment' tag or the data with 'comment' is invalid")
+        try:
+            a = request.data['comment']
+            b = a['author']
+        except:
+            HttpResponse.status_code = 400
+            return HttpResponse("the body u provided its comment tag does not contain a 'auth' tag")
+        try:
+            post = Posts.objects.get(id = post_id)
+        except:
+            HttpResponse.status_code = 400
+            return HttpResponse("the post_id u provided is invalid or there is no such posts with this id")
+        a = request.data['comment']
+        try:
+            a = request.data['comment']
+            b = a['author']
+            CommentsCreateSerializer.create(b,a,post_id)
+            response = {
 	                "query": "addComment",
                     "success":True,
                     "message":"Comment Added"
                 }
-                return Response(response, status=200)
-            except:
-                response = {
+            return Response(response, status=200)
+        except:
+            response = {
 	                "query": "addComment",
                     "success":False,
                     "message":"Comment Added"
                 }
-                return Response(response, status=406)
+            return Response(response, status=406)
 
 @api_view(['DELETE'])
 # delete
