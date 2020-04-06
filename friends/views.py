@@ -66,13 +66,13 @@ class FollowingViewSet(viewsets.ModelViewSet):
         # checkhost
         
         # sent from someone we don't trust
-        if ((getHost() not in senderHost) and (not Server.objects.filter(domain=senderHost, status=True).exists())):
+        if ((getHost(request) not in senderHost) and (not Server.objects.filter(domain=senderHost, status=True).exists())):
             response["error"] = "Sender host is not trusted: {}".format(senderHost)
             return Response(response, status=400)
         
         
         # receiver host is not ours, send to other server
-        if (getHost() not in receiverHost):
+        if (getHost(request) not in receiverHost):
             if (Server.objects.filter(domain=receiverHost, status=True).exists()):
                 # send to other server
                 url = "{}friendrequest/".format(receiverHost)                    
@@ -465,7 +465,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
                 
             # get friends from following model
             userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-            response["authors"] = friendList(userUrl)
+            response["authors"] = friendList(userUrl, request)
             return Response(response, status=200)
 
 
@@ -483,7 +483,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
             try:
                 toCheck = request.data["authors"]
                 userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-                ListofFriends = friendList(userUrl)
+                ListofFriends = friendList(userUrl, request)
                 isFriend = []
                 # check if friend is a user's friend
                 for friend in toCheck:
@@ -625,7 +625,7 @@ def get_host(string):
         return '/'.join(string.split('/')[:-3])
     except:
         ''
-def friendList(userUrl):  
+def friendList(userUrl, request):  
     
     query1 = Following.objects.filter(receiver=userUrl, status=True)
     query2 = Following.objects.filter(sender=userUrl, status=True)
@@ -646,7 +646,7 @@ def friendList(userUrl):
     for item in query:
         if (item.status != True):
             hostUrl, _ = normalize(get_host(item.receiver), '/')
-            if ((hostUrl == getHost()) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
+            if ((hostUrl == getHost(request)) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
                 continue
             url = "{}author/{}/friends/{}/".format(hostUrl, get_id(item.receiver), get_id(userUrl))
             try:
@@ -707,7 +707,7 @@ def are_friends(request, pk=None, sk=None):
     for friend in query:
         if ((friend.status != True) and (get_id(friend.receiver) == str(friendID))):
             hostUrl, _ = normalize(get_host(friend.receiver), '/')
-            if ((hostUrl == getHost()) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
+            if ((hostUrl == getHost(request)) or (hostUrl == '') or (not Server.objects.filter(domain=hostUrl, status=True).exists())):
                 break
             url = "{}author/{}/friends/{}/".format(hostUrl, str(friendID), get_id(userUrl))
             try:
