@@ -543,7 +543,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
 
 
-    @action(methods=['get'], detail=True, url_path='friends/(?P<qk>[^/.]+)/author/(?P<sk>[^/.]+)', url_name='areFriends')
+    @action(methods=['get'], detail=True, url_path='friends/(?P<qk>[^/]+)/author/(?P<sk>[^/.]+)', url_name='areFriends')
     def are_friends_full_redirect(self, request, pk=None, qk=None, sk=None):
         return are_friends(request, pk, sk=sk)
 
