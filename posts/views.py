@@ -89,6 +89,7 @@ class PostsViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def get_public_posts(request):
+    list = ["https://cloud-align-server.herokuapp.com/","https://cloud-align-server2.herokuapp.com/","https://shrouded-anchorage-92529.herokuapp.com/service/","http://127.0.0.1:8000/"]
     #queryset = Posts.objects.filter(visibility = True).order_by("-published")
     try:
         auth_header = request.META['HTTP_AUTHORIZATION']
@@ -120,7 +121,10 @@ def get_public_posts(request):
                 try:
                     domain = server["domain"]
                     url = "{}posts".format(domain)
-                    response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+                    if domain in list:
+                        response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+                    else:
+                        response = requests.get(url=url)
                     print(response.status_code)
                     if 200 <= response.status_code <= 299:
                         data = response.json()
@@ -145,6 +149,7 @@ def get_public_posts(request):
             return Response(response)
         
     except:
+        
         queryset = Posts.objects.filter(visibility="PUBLIC").order_by("-published")
         serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
         all_posts = serializer_class.data
@@ -154,7 +159,10 @@ def get_public_posts(request):
             try:
                 domain = server["domain"]
                 url = "{}posts".format(domain)
-                response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+                if domain in list:
+                    response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+                else:
+                    response = requests.get(url=url)
                 print(response.status_code)
                 if 200 <= response.status_code <= 299:
                     data = response.json()
