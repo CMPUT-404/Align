@@ -295,7 +295,8 @@ def get_posts_by_auth(request):
         for server in server_serializer.data:
             try:
                 domain = server["domain"]
-                if domain in list:
+                domain_extra = domain + "service/"
+                if domain in list or domain_extra in list:
                     url = "{}author/posts".format(domain)
                     headers = {'X-USER-ID': str(user.id),'X-HOST':str(url_forhost)}
                     response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'),headers=headers)
