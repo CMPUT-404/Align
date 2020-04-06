@@ -168,6 +168,8 @@ def get_posts_author(request, author_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_posts_by_auth(request):
+    list = ["https://cloud-align-server.herokuapp.com/", "https://cloud-align-server2.herokuapp.com/",
+            "https://shrouded-anchorage-92529.herokuapp.com/service/", "http://127.0.0.1:8000/"]
     try:
         auth_header = request.META['HTTP_AUTHORIZATION']
         encoded_credentials = auth_header.split(' ')[1]  # Removes "Basic " to isolate credentials
@@ -293,10 +295,14 @@ def get_posts_by_auth(request):
         for server in server_serializer.data:
             try:
                 domain = server["domain"]
-                url = "{}author/posts".format(domain)
-                headers = {'X-USER-ID': str(user.id),'X-HOST':str(url_forhost)}
-                response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'),headers=headers)
-          
+                if domain in list:
+                    url = "{}author/posts".format(domain)
+                    headers = {'X-USER-ID': str(user.id),'X-HOST':str(url_forhost)}
+                    response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'),headers=headers)
+                else:
+                    url = "{}posts".format(domain)
+                    response = requests.get(url=url)
+                
                 if 200 <= response.status_code <= 299:
                     data = response.json()
                     posts = data['posts']
