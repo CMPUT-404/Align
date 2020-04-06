@@ -125,9 +125,10 @@ def get_public_posts(request):
                     if 200 <= response.status_code <= 299:
                         data = response.json()
                         posts = data['posts']
+                        all_posts += posts
                     if posts is None:
                         raise Exception(data)
-                    all_posts += posts
+                    
                 except Exception as e:
                     # return Response(e.args, status=500)
                     print("[ERROR] NETWORK ERROR WHEN GET POSTS FROM", url, e.args)
@@ -158,9 +159,10 @@ def get_public_posts(request):
                 if 200 <= response.status_code <= 299:
                     data = response.json()
                     posts = data['posts']
+                    all_posts += posts
                 if posts is None:
                     raise Exception(data)
-                all_posts += posts
+                
             except Exception as e:
                 # return Response(e.args, status=500)
                 print("[ERROR] NETWORK ERROR WHEN GET POSTS FROM", url, e.args)
