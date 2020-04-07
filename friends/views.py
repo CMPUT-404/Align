@@ -530,12 +530,8 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
         # add to friend list
         for follower in query:
-            followerList.append(follower.receiver)
-
-        query = Following.objects.filter(receiver=userUrl)
-        for follower in query:
-            if (follower.status == True):
-                followerList.append(follower.sender)	
+            if (follower.status != True):
+                followerList.append(follower.receiver)	
 
         response["authors"] = followerList
         return Response(response, status=200)
