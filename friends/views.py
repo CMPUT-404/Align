@@ -639,7 +639,8 @@ def friendList(userUrl, request):
         friendList.append(friend.sender)
 
     for friend in query2:
-        friendList.append(friend.receiver)
+        if (friend.receiver not in friendList):
+            friendList.append(friend.receiver) 
         
     # check other servers    
     query = Following.objects.filter(sender=userUrl)
