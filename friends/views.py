@@ -318,12 +318,8 @@ class FollowingViewSet(viewsets.ModelViewSet):
                 # change reverse relation
                 result2.status = False
                 result2.save()
-                result1.delete()
                 
-            else:
-                # reverse relation doesn't exist
-                result1.status = False
-                result1.save()
+            result1.delete()
                 
             response["success"] = True
             response["message"] = "Friend deleted"
@@ -341,12 +337,8 @@ class FollowingViewSet(viewsets.ModelViewSet):
                 # change reverse relation
                 result1.status = False
                 result1.save()
-                result2.delete()
                 
-            else:
-                # reverse relation doesn't exist
-                result2.status = False
-                result2.save()
+            result2.delete()
                 
             response["success"] = True
             response["message"] = "Friend deleted"
@@ -530,12 +522,8 @@ class AuthorViewSet(viewsets.ModelViewSet):
 
         # add to friend list
         for follower in query:
-            followerList.append(follower.receiver)
-
-        query = Following.objects.filter(receiver=userUrl)
-        for follower in query:
-            if (follower.status == True):
-                followerList.append(follower.sender)	
+            if (follower.status != True):
+                followerList.append(follower.receiver)	
 
         response["authors"] = followerList
         return Response(response, status=200)
