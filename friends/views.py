@@ -318,12 +318,8 @@ class FollowingViewSet(viewsets.ModelViewSet):
                 # change reverse relation
                 result2.status = False
                 result2.save()
-                result1.delete()
                 
-            else:
-                # reverse relation doesn't exist
-                result1.status = False
-                result1.save()
+            result1.delete()
                 
             response["success"] = True
             response["message"] = "Friend deleted"
@@ -341,12 +337,8 @@ class FollowingViewSet(viewsets.ModelViewSet):
                 # change reverse relation
                 result1.status = False
                 result1.save()
-                result2.delete()
                 
-            else:
-                # reverse relation doesn't exist
-                result2.status = False
-                result2.save()
+            result2.delete()
                 
             response["success"] = True
             response["message"] = "Friend deleted"
