@@ -168,16 +168,16 @@ def get_posts_author(request, author_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_posts_by_auth(request):
-    list = ["https://cloud-align-server.herokuapp.com/", "https://cloud-align-server2.herokuapp.com/",
-            "https://shrouded-anchorage-92529.herokuapp.com/service/", "http://127.0.0.1:8000/"]
     try:
         auth_header = request.META['HTTP_AUTHORIZATION']
+        print(request.META['HTTP_X_USER_ID'])
         encoded_credentials = auth_header.split(' ')[1]  # Removes "Basic " to isolate credentials
         decoded_credentials = base64.b64decode(encoded_credentials).decode("utf-8").split(':')
         username = decoded_credentials[0]
         password = decoded_credentials[1]
-        host = request.META['HTTP_X_HOST']
-        user_id = request.META['HTTP_X_USER_ID']
+        info = request.META['HTTP_X_USER_ID']
+        host = info[:-44]
+        user_id = info[-37:-1]
         if username == "remote@host.com":
             if password == "yipu666":
                 servers = Server.objects.all()
@@ -193,20 +193,14 @@ def get_posts_by_auth(request):
                         final_list = []
                         large_list = []
                         for i in friendList:
-                            print(i)
                             a = i[-37:-1]
                             b = i[0:20]
                             final_list.append(a)
                             try:
                                 queryset = User.objects.get(id = a)
-                                print(queryset.id)
                                 userUrl, _ = normalize(UserSerializer(queryset, context={'request': request}).data["url"], '/')
-                                print(userUrl)
                                 query1 = Following.objects.filter(receiver=userUrl, status=True)
-                                print(Following.objects.all())
-                                print(query1)
                                 query2 = Following.objects.filter(sender=userUrl, status=True)
-                                print(query2)
                                 for friend in query1:
                                     
                                     d = friend.sender
@@ -215,28 +209,19 @@ def get_posts_by_auth(request):
                                     
                                     e = friend.receiver
                                     large_list.append(e[-37:-1])
-                                print("________")
-                                print(large_list)
                             except:
                                 pass
                             for server_1 in server_serializer.data:
                                 domain_1 = server_1["domain"]
-                                print("_______________")
-                                print(domain_1)
-                                print(b)
-                                print(b in domain_1)
-                                print("_________________")
                                 if b in domain_1:
                                     url_string = "{}author/"+str(a)+"/friends/"  
                                     url = url_string.format(domain_1)
                                     response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
                                     data = response.json()
-                                    print(data)
                                     small_list = data["authors"]
                                     for j in small_list:
                                         c = j[-37:-1]
                                         large_list.append(c)
-                            print(large_list)
                 queryset = Posts.objects.all().filter(Q(visibility = "FOAF",author_obj__in = large_list)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = final_list)|Q(visibility = "PRIVATE",visibleTo__icontains = user_id)).order_by("-published")
                 serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
                 dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
@@ -247,49 +232,41 @@ def get_posts_by_auth(request):
             return Response("wrong username", status=403)
     # feed_bot = authenticate(username=username, password=password
     except:
+        list = ["http://127.0.0.1:8000/","http://127.0.0.1:7000/"]
         user = request.user
         current_obj = user
         user_url = UserSerializer(user, context={'request': request}).data["url"]
-        url_forhost = user_url[:-44]
-        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-        query1 = Following.objects.filter(receiver=userUrl, status=True)
-        query2 = Following.objects.filter(sender=userUrl, status=True)
+        #url_forhost = user_url[:-44]
+        domain = user_url[:-44]
+        url_string = "{}author/"+str(user.id)+"/friends/"  
+        url = url_string.format(domain)
+        response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+        data = response.json()
+        friend_list = data["authors"]
         friendList = []
-        large_friendList = []
-        for friend in query1:
-            a = friend.sender
-            friendList.append(a[-37:-1])
-
-        for friend in query2:
-            a = friend.receiver
-            friendList.append(a[-37:-1])
-
+        large_friendList_1 = []
+        large_friendList_2 = []
+        for friend in friend_list:
+            friendList.append(friend[-37:-1])
+        print(friendList)
         for friend_id in friendList:
-            aList = []
-            friend_user = User.objects.filter(id=friend_id)
-
-            # print(friend_user)
-            userUrl, _ = normalize(UserSerializer(friend_user[0], context={'request': request}).data["url"], '/')
-            query1 = Following.objects.filter(receiver=userUrl, status=True)
-            query2 = Following.objects.filter(sender=userUrl, status=True)
-            for friend in query1:
-                a = friend.sender
-                aList.append(a[-37:-1])
-
-            for friend in query2:
-                a = friend.receiver
-                aList.append(a[-37:-1])
-
-            large_friendList = large_friendList + aList
+            url_string = "{}author/"+str(friend_id)+"/friends/"  
+            url = url_string.format(domain)
+            print(url)
+            response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+            if 200 <= response.status_code <= 299:
+                data = response.json()
+                large_friendList_1 = large_friendList_1 + data["authors"]
+        for friend in large_friendList_1:
+            large_friendList_2.append(friend[-37:-1])
         queryset = Posts.objects.all().filter(
             Q(visibility="SERVERONLY") | Q(author_obj=current_obj) | Q(visibility="FOAF",
-                                                                       author_obj__in=large_friendList) | Q(
+                                                                       author_obj__in=large_friendList_2) | Q(
                 visibility="PUBLIC") | Q(visibility="FRIENDS", author_obj__in=friendList) | Q(visibility="PRIVATE",
                                                                                               visibleTo__icontains=current_obj.id)).order_by(
             "-published")
         serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
         all_posts = serializer_class.data
-        
         servers = Server.objects.all()
         server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
         for server in server_serializer.data:
@@ -298,12 +275,12 @@ def get_posts_by_auth(request):
                 domain_extra = domain + "service/"
                 if domain in list or domain_extra in list:
                     url = "{}author/posts".format(domain)
-                    headers = {'X-USER-ID': str(user.id),'X-HOST':str(url_forhost)}
+                    headers = {'X-USER-ID': str(user_url)}
                     response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'),headers=headers)
                 else:
                     url = "{}posts".format(domain)
                     response = requests.get(url=url)
-                
+          
                 if 200 <= response.status_code <= 299:
                     data = response.json()
                     posts = data['posts']
@@ -329,14 +306,19 @@ def get_posts_by_auth(request):
 @permission_classes([IsAuthenticated])
 def get_posts(request,author_id):
     try:
-        author_obj = User.objects.get(id = author_id)
+        try:
+            author_obj = User.objects.get(id = author_id)
+        except:
+            pass
         auth_header = request.META['HTTP_AUTHORIZATION']
+        print(request.META['HTTP_X_USER_ID'])
         encoded_credentials = auth_header.split(' ')[1]  # Removes "Basic " to isolate credentials
         decoded_credentials = base64.b64decode(encoded_credentials).decode("utf-8").split(':')
         username = decoded_credentials[0]
         password = decoded_credentials[1]
-        host = request.META['HTTP_X_HOST']
-        user_id = request.META['HTTP_X_USER_ID']
+        info = request.META['HTTP_X_USER_ID']
+        host = info[:-44]
+        user_id = info[-37:-1]
         if username == "remote@host.com":
             if password == "yipu666":
                 servers = Server.objects.all()
@@ -344,7 +326,7 @@ def get_posts(request,author_id):
                 for server in server_serializer.data:
                     domain = server["domain"]
                     if host in domain:
-                        url_string = "{}author/"+str(user_id)+"/friends/"  
+                        url_string = "{}author/"+str(user_id)+"/friends/"
                         url = url_string.format(domain)
                         response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
                         data = response.json()
@@ -352,51 +334,39 @@ def get_posts(request,author_id):
                         final_list = []
                         large_list = []
                         for i in friendList:
-                            print(i)
                             a = i[-37:-1]
                             b = i[0:20]
                             final_list.append(a)
                             try:
                                 queryset = User.objects.get(id = a)
-                                print(queryset.id)
                                 userUrl, _ = normalize(UserSerializer(queryset, context={'request': request}).data["url"], '/')
-                                print(userUrl)
                                 query1 = Following.objects.filter(receiver=userUrl, status=True)
-                                print(Following.objects.all())
-                                print(query1)
                                 query2 = Following.objects.filter(sender=userUrl, status=True)
-                                print(query2)
                                 for friend in query1:
-                                    
+
                                     d = friend.sender
                                     large_list.append(d[-37:-1])
                                 for friend in query2:
-                                    
+
                                     e = friend.receiver
                                     large_list.append(e[-37:-1])
-                                print("________")
-                                print(large_list)
                             except:
                                 pass
                             for server_1 in server_serializer.data:
                                 domain_1 = server_1["domain"]
-                                print("_______________")
-                                print(domain_1)
-                                print(b)
-                                print(b in domain_1)
-                                print("_________________")
                                 if b in domain_1:
-                                    url_string = "{}author/"+str(a)+"/friends/"  
+                                    url_string = "{}author/"+str(a)+"/friends/"
                                     url = url_string.format(domain_1)
                                     response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
                                     data = response.json()
-                                    print(data)
                                     small_list = data["authors"]
                                     for j in small_list:
                                         c = j[-37:-1]
                                         large_list.append(c)
-                            print(large_list)
-                queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "FOAF",author_obj__in = large_list)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = final_list)|Q(visibility = "PRIVATE",visibleTo__icontains = user_id)).order_by("-published")
+                try:
+                    queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "FOAF",author_obj__in = large_list)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = final_list)|Q(visibility = "PRIVATE",visibleTo__icontains = user_id)).order_by("-published")
+                except:
+                    queryset = Posts.objects.all().filter(unlisted = True)
                 serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
                 dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
                 return Response(dict,status = 200)
@@ -404,47 +374,49 @@ def get_posts(request,author_id):
                 return Response("wrong password", status=403)
         else:
             return Response("wrong username", status=403)
+    # feed_bot = authenticate(username=username, password=password
     except:
-        author_obj = User.objects.get(id = author_id)
+        try:
+            author_obj = User.objects.get(id = author_id)
+        except:
+            pass
         user = request.user
         current_obj = user
         user_url = UserSerializer(user, context={'request': request}).data["url"]
-        url_forhost = user_url[:-44]
-        userUrl, _ = normalize(UserSerializer(user, context={'request': request}).data["url"], '/')
-        query1 = Following.objects.filter(receiver=userUrl, status=True)
-        query2 = Following.objects.filter(sender=userUrl, status=True)
+        #url_forhost = user_url[:-44]
+        domain = user_url[:-44]
+        url_string = "{}author/"+str(user.id)+"/friends/"
+        url = url_string.format(domain)
+        response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+        data = response.json()
+        friend_list = data["authors"]
         friendList = []
-        large_friendList = []
-        for friend in query1:
-            a = friend.sender
-            friendList.append(a[-37:-1])
-
-        for friend in query2:
-            a = friend.receiver
-            friendList.append(a[-37:-1])
-
+        large_friendList_1 = []
+        large_friendList_2 = []
+        for friend in friend_list:
+            friendList.append(friend[-37:-1])
+        print(friendList)
         for friend_id in friendList:
-            aList = []
-            friend_user = User.objects.filter(id=friend_id)
-
-            #print(friend_user)
-            userUrl, _ = normalize(UserSerializer(friend_user[0], context={'request': request}).data["url"], '/')
-            query1 = Following.objects.filter(receiver=userUrl, status=True)
-            query2 = Following.objects.filter(sender=userUrl, status=True)
-            for friend in query1:
-                a = friend.sender
-                aList.append(a[-37:-1])
-
-            for friend in query2:
-                a = friend.receiver
-                aList.append(a[-37:-1])
-
-            large_friendList = large_friendList + aList
-        queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "SERVERONLY")|Q(author_obj = current_obj)|Q(visibility = "FOAF",author_obj__in = large_friendList)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = friendList)|Q(visibility = "PRIVATE",visibleTo__icontains = current_obj.id)).order_by("-published")
+            url_string = "{}author/"+str(friend_id)+"/friends/"
+            url = url_string.format(domain)
+            print(url)
+            response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
+            if 200 <= response.status_code <= 299:
+                data = response.json()
+                large_friendList_1 = large_friendList_1 + data["authors"]
+        for friend in large_friendList_1:
+            large_friendList_2.append(friend[-37:-1])
+        try:
+            queryset = Posts.objects.all().filter(author_obj = author_obj).filter(
+            Q(visibility="SERVERONLY") | Q(author_obj=current_obj) | Q(visibility="FOAF",
+                                                                       author_obj__in=large_friendList_2) | Q(
+                visibility="PUBLIC") | Q(visibility="FRIENDS", author_obj__in=friendList) | Q(visibility="PRIVATE",
+                                                                                              visibleTo__icontains=current_obj.id)).order_by(
+            "-published")
+        except:
+            queryset = Posts.objects.all().filter(unlisted = True)
         serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
-
         all_posts = serializer_class.data
-        
         servers = Server.objects.all()
         server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
         for server in server_serializer.data:
@@ -452,8 +424,10 @@ def get_posts(request,author_id):
                 domain = server["domain"]
                 url_practice = "{}author/"+str(author_id)+"/posts"
                 url = url_practice.format(domain)
-                headers = {'X-USER-ID': str(user.id),'X-HOST':str(url_forhost)}
+                headers = {'X-USER-ID': str(user_url)}
+                print(url)
                 response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'),headers=headers)
+
                 if 200 <= response.status_code <= 299:
                     data = response.json()
                     posts = data['posts']
@@ -464,7 +438,7 @@ def get_posts(request,author_id):
                 # return Response(e.args, status=500)
                 print("[ERROR] NETWORK ERROR WHEN GET POSTS FROM", url, e.args)
                 pass
-        
+
         response = {
             "query": "posts",
             "count": len(all_posts),
