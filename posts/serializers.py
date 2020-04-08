@@ -65,7 +65,7 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
         else:
             schema = "https"
         post.source = "{}://{}/posts/{}/".format(schema, request.META['HTTP_HOST'], post.id)
-        post.origin = "{}/posts/{}/".format(request.META['HTTP_ORIGIN'], post.id)
+        post.origin = "{}://{}/posts/{}/".format(schema, request.META['HTTP_HOST'], post.id)
         post.save()
 
         return post
