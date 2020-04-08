@@ -179,7 +179,11 @@ def get_posts_by_auth(request):
         if info[-1] != "/":
             info = info + "/"
         host = info[:-44]
+        print("____")
+        print(host)
         user_id = info[-37:-1]
+        print(user_id)
+        print("____")
         if username == "remote@host.com":
             if password == "yipu666":
                 servers = Server.objects.all()
@@ -210,6 +214,8 @@ def get_posts_by_auth(request):
                         large_list = []
                         
                         for i in friendList:
+                            if i[-1]!="/":
+                                i = i + "/"
                             a = i[-37:-1]
                             b = i[0:20]
                             final_list.append(a)
@@ -237,10 +243,13 @@ def get_posts_by_auth(request):
                                     data = response.json()
                                     small_list = data["authors"]
                                     for j in small_list:
+                                        if j[-1]!="/":
+                                            j = j + "/"
                                         c = j[-37:-1]
                                         large_list.append(c)
-                print(friendList)
-                queryset = Posts.objects.all().filter(Q(visibility = "FOAF",author_obj__in = large_list)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = final_list)|Q(visibility = "PRIVATE",visibleTo__icontains = user_id)).order_by("-published")
+                print(large_list)
+                print("_________")
+                queryset = Posts.objects.all().filter(Q(visibility = "FOAF",author_obj__in = final_list)|Q(visibility = "FOAF",author_obj__in = large_list)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = final_list)|Q(visibility = "PRIVATE",visibleTo__icontains = user_id)).order_by("-published")
                 print(queryset)
                 serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
                 dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
@@ -251,8 +260,8 @@ def get_posts_by_auth(request):
             return Response("wrong username", status=403)
     # feed_bot = authenticate(username=username, password=password
     except:
-        #list = ["https://cloud-align-server2.herokuapp.com/","https://cloud-align-server.herokuapp.com/","https://cmput404projecttestserver3.herokuapp.com/"]
-        list = ["http://127.0.0.1:8000/","http://127.0.0.1:7000/","https://cmput404projecttestserver3.herokuapp.com/service/"]
+        list = ["https://cloud-align-server2.herokuapp.com/","https://cloud-align-server.herokuapp.com/","https://cmput404projecttestserver3.herokuapp.com/"]
+        #list = ["http://127.0.0.1:8000/","http://127.0.0.1:7000/","https://cmput404projecttestserver3.herokuapp.com/service/"]
         user = request.user
         current_obj = user
         user_url = UserSerializer(user, context={'request': request}).data["url"]
@@ -279,7 +288,7 @@ def get_posts_by_auth(request):
                 large_friendList_1 = large_friendList_1 + data["authors"]
         for friend in large_friendList_1:
             large_friendList_2.append(friend[-37:-1])
-        queryset = Posts.objects.all().filter(
+        queryset = Posts.objects.all().filter(Q(visibility = "FOAF",author_obj__in = friendList)|
             Q(visibility="SERVERONLY") | Q(author_obj=current_obj) | Q(visibility="FOAF",
                                                                        author_obj__in=large_friendList_2) | Q(
                 visibility="PUBLIC") | Q(visibility="FRIENDS", author_obj__in=friendList) | Q(visibility="PRIVATE",
@@ -356,6 +365,8 @@ def get_posts(request,author_id):
                         final_list = []
                         large_list = []
                         for i in friendList:
+                            if i[-1] != "/":
+                                i = i + "/"
                             a = i[-37:-1]
                             b = i[0:20]
                             final_list.append(a)
@@ -383,10 +394,12 @@ def get_posts(request,author_id):
                                     data = response.json()
                                     small_list = data["authors"]
                                     for j in small_list:
+                                        if j[-1] != "/":
+                                            j = j + "/"
                                         c = j[-37:-1]
                                         large_list.append(c)
                 try:
-                    queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "FOAF",author_obj__in = large_list)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = final_list)|Q(visibility = "PRIVATE",visibleTo__icontains = user_id)).order_by("-published")
+                    queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility = "FOAF",author_obj__in = final_list)|Q(visibility = "FOAF",author_obj__in = large_list)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = final_list)|Q(visibility = "PRIVATE",visibleTo__icontains = user_id)).order_by("-published")
                 except:
                     queryset = Posts.objects.all().filter(unlisted = True)
                 serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
@@ -429,12 +442,7 @@ def get_posts(request,author_id):
         for friend in large_friendList_1:
             large_friendList_2.append(friend[-37:-1])
         try:
-            queryset = Posts.objects.all().filter(author_obj = author_obj).filter(
-            Q(visibility="SERVERONLY") | Q(author_obj=current_obj) | Q(visibility="FOAF",
-                                                                       author_obj__in=large_friendList_2) | Q(
-                visibility="PUBLIC") | Q(visibility="FRIENDS", author_obj__in=friendList) | Q(visibility="PRIVATE",
-                                                                                              visibleTo__icontains=current_obj.id)).order_by(
-            "-published")
+            queryset = Posts.objects.all().filter(author_obj = author_obj).filter(Q(visibility="SERVERONLY") | Q(author_obj=current_obj) | Q(visibility="FOAF",author_obj__in=large_friendList_2)| Q(visibility="FOAF",author_obj__in=friendList) | Q(visibility="PUBLIC") | Q(visibility="FRIENDS", author_obj__in=friendList) | Q(visibility="PRIVATE",visibleTo__icontains=current_obj.id)).order_by("-published")
         except:
             queryset = Posts.objects.all().filter(unlisted = True)
         serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
