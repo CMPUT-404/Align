@@ -184,7 +184,8 @@ def get_posts_by_auth(request):
                 server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
                 for server in server_serializer.data:
                     domain = server["domain"]
-                    if host in domain:
+                    host_extra = host + "service/"
+                    if host in domain or host_extra in domain:
                         url_string = "{}author/"+str(user_id)+"/friends/"  
                         url = url_string.format(domain)
                         response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
@@ -232,7 +233,7 @@ def get_posts_by_auth(request):
             return Response("wrong username", status=403)
     # feed_bot = authenticate(username=username, password=password
     except:
-        list = ["https://cloud-align-server2.herokuapp.com/","https://cloud-align-server.herokuapp.com/","https://shrouded-anchorage-92529.herokuapp.com/"]
+        list = ["https://cloud-align-server2.herokuapp.com/","https://cloud-align-server.herokuapp.com/","https://cmput404projecttestserver3.herokuapp.com/"]
         user = request.user
         current_obj = user
         user_url = UserSerializer(user, context={'request': request}).data["url"]
@@ -324,8 +325,8 @@ def get_posts(request,author_id):
                 servers = Server.objects.all()
                 server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
                 for server in server_serializer.data:
-                    domain = server["domain"]
-                    if host in domain:
+                    host_extra = host + "service/"
+                    if host in domain or host_extra in domain:
                         url_string = "{}author/"+str(user_id)+"/friends/"
                         url = url_string.format(domain)
                         response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
