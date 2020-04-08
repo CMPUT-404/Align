@@ -232,7 +232,7 @@ def get_posts_by_auth(request):
             return Response("wrong username", status=403)
     # feed_bot = authenticate(username=username, password=password
     except:
-        list = ["http://127.0.0.1:8000/","http://127.0.0.1:7000/"]
+        list = ["https://cloud-align-server2.herokuapp.com/","https://cloud-align-server.herokuapp.com/","https://shrouded-anchorage-92529.herokuapp.com/"]
         user = request.user
         current_obj = user
         user_url = UserSerializer(user, context={'request': request}).data["url"]
