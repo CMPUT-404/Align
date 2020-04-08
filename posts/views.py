@@ -176,6 +176,8 @@ def get_posts_by_auth(request):
         username = decoded_credentials[0]
         password = decoded_credentials[1]
         info = request.META['HTTP_X_USER_ID']
+        if info[-1] != "/":
+            info = info + "/"
         host = info[:-44]
         user_id = info[-37:-1]
         if username == "remote@host.com":
@@ -184,15 +186,29 @@ def get_posts_by_auth(request):
                 server_serializer = ServerSerializer(instance=servers, context={'request': request}, many=True)
                 for server in server_serializer.data:
                     domain = server["domain"]
+                    print("_________________")
+                    print(domain)
+                    print(host)
+                    print("_________________")
                     host_extra = host + "service/"
                     if host in domain or host_extra in domain:
-                        url_string = "{}author/"+str(user_id)+"/friends/"  
+                        print("_________________")
+                        print(host in domain or host_extra in domain)
+                        print(host)
+                        print(host_extra)
+                        print(domain)
+
+                        print("_________________")
+                        url_string = "{}author/"+str(user_id)+"/friends"  
                         url = url_string.format(domain)
+                        print(url)
                         response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
                         data = response.json()
                         friendList = data["authors"]
+                        print(friendList)
                         final_list = []
                         large_list = []
+                        
                         for i in friendList:
                             a = i[-37:-1]
                             b = i[0:20]
@@ -215,7 +231,7 @@ def get_posts_by_auth(request):
                             for server_1 in server_serializer.data:
                                 domain_1 = server_1["domain"]
                                 if b in domain_1:
-                                    url_string = "{}author/"+str(a)+"/friends/"  
+                                    url_string = "{}author/"+str(a)+"/friends"  
                                     url = url_string.format(domain_1)
                                     response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
                                     data = response.json()
@@ -223,7 +239,9 @@ def get_posts_by_auth(request):
                                     for j in small_list:
                                         c = j[-37:-1]
                                         large_list.append(c)
+                print(friendList)
                 queryset = Posts.objects.all().filter(Q(visibility = "FOAF",author_obj__in = large_list)|Q(visibility = "PUBLIC")|Q(visibility = "FRIENDS",author_obj__in = final_list)|Q(visibility = "PRIVATE",visibleTo__icontains = user_id)).order_by("-published")
+                print(queryset)
                 serializer_class = PostsSerializer(instance=queryset, context={'request': request}, many=True)
                 dict = {"query":"posts","count":len(serializer_class.data),"size": None,"next":None,"previous":None,"posts":serializer_class.data}
                 return Response(dict,status = 200)
@@ -233,7 +251,8 @@ def get_posts_by_auth(request):
             return Response("wrong username", status=403)
     # feed_bot = authenticate(username=username, password=password
     except:
-        list = ["https://cloud-align-server2.herokuapp.com/","https://cloud-align-server.herokuapp.com/","https://cmput404projecttestserver3.herokuapp.com/"]
+        #list = ["https://cloud-align-server2.herokuapp.com/","https://cloud-align-server.herokuapp.com/","https://cmput404projecttestserver3.herokuapp.com/"]
+        list = ["http://127.0.0.1:8000/","http://127.0.0.1:7000/","https://cmput404projecttestserver3.herokuapp.com/service/"]
         user = request.user
         current_obj = user
         user_url = UserSerializer(user, context={'request': request}).data["url"]
@@ -249,11 +268,11 @@ def get_posts_by_auth(request):
         large_friendList_2 = []
         for friend in friend_list:
             friendList.append(friend[-37:-1])
-        print(friendList)
+        #print(friendList)
         for friend_id in friendList:
             url_string = "{}author/"+str(friend_id)+"/friends/"  
             url = url_string.format(domain)
-            print(url)
+            #print(url)
             response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
             if 200 <= response.status_code <= 299:
                 data = response.json()
@@ -318,6 +337,8 @@ def get_posts(request,author_id):
         username = decoded_credentials[0]
         password = decoded_credentials[1]
         info = request.META['HTTP_X_USER_ID']
+        if info[-1] != "/":
+            info = info + "/"
         host = info[:-44]
         user_id = info[-37:-1]
         if username == "remote@host.com":
@@ -327,7 +348,7 @@ def get_posts(request,author_id):
                 for server in server_serializer.data:
                     host_extra = host + "service/"
                     if host in domain or host_extra in domain:
-                        url_string = "{}author/"+str(user_id)+"/friends/"
+                        url_string = "{}author/"+str(user_id)+"/friends"
                         url = url_string.format(domain)
                         response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
                         data = response.json()
@@ -356,7 +377,7 @@ def get_posts(request,author_id):
                             for server_1 in server_serializer.data:
                                 domain_1 = server_1["domain"]
                                 if b in domain_1:
-                                    url_string = "{}author/"+str(a)+"/friends/"
+                                    url_string = "{}author/"+str(a)+"/friends"
                                     url = url_string.format(domain_1)
                                     response = requests.get(url=url,auth=HTTPBasicAuth('remote@host.com', 'yipu666'))
                                     data = response.json()
