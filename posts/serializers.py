@@ -19,6 +19,7 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
     author = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
+    origin = serializers.SerializerMethodField()
     #visible = serializers.SerializerMethodField()
     class Meta:
         model = Posts
@@ -29,6 +30,9 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_categories(self,obj):
         return ["web","tutorial"]
+
+    def get_origin(self,obj):
+        return obj.source
     
 
     def get_comments(self,obj):
