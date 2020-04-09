@@ -32,7 +32,9 @@ class PostsSerializer(serializers.HyperlinkedModelSerializer):
         return ["web","tutorial"]
 
     def get_origin(self,obj):
-        return obj.source
+        if obj.source[-1] == "/":
+            good_for_Wed = obj.source[:-1]
+        return good_for_Wed
     
 
     def get_comments(self,obj):

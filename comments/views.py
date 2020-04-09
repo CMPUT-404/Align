@@ -55,9 +55,9 @@ def post_comments(request,post_id):
                     find = True
                     break
             if find:
-                    list = ["https://cmput404projecttestserver3.herokuapp.com/"]
-                    if host in list:
-                        host = host + "service/"
+                    #list = ["https://cmput404projecttestserver3.herokuapp.com/"]
+                    #if host in list:
+                        #host = host + "service/"
                     # url = "{}posts/{}".format(host, postId)  #FIXME
                     url_format = '{}posts/' + post_id + '/comments'
                     url = url_format.format(host)  # XXX workaround
